@@ -1,0 +1,9 @@
+#Node
+/server/node_modules
+
+#Dist
+/dist
+
+#Private
+*.log
+*.csv
