@@ -1,8 +1,3 @@
-// let mongoose = require('mongoose');
-// let errorBase = require('./error/base');
-// let commonErrors = require('./error');
-// let ProviderExtensions = require('./extensions/provider');
-// let Util = require('./util/util');
 import { Model, Document } from 'mongoose';
 
 import { Logger } from './logger';

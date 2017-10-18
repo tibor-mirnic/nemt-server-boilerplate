@@ -1,12 +1,14 @@
 import * as passport from 'passport';
 import { NextFunction } from 'express';
+import { Document } from 'mongoose';
 
 import { Server } from './../server';
 import { IRequest } from './../models/express/request';
 import { IResponse } from './../models/express/response';
 import { IPassportInfo } from './../models/passport';
-import { UserModel } from './../../db/models/user/model';
 import { ForbiddenError } from './../error/forbidden';
+
+import { IUser } from './../../db/models/user/user';
 
 import { PassportStrategies } from './strategies';
 
@@ -22,7 +24,7 @@ export class Passport {
 
   local(request: IRequest, response: IResponse, next: NextFunction) {
     passport.authenticate('local', { session: false },
-      (error: any, user: UserModel, info: IPassportInfo) => {
+      (error: any, user: Document & IUser, info: IPassportInfo) => {
         if (error) {
           return next(this.server.logger.logRequest(error, request));
         }
@@ -35,7 +37,7 @@ export class Passport {
 
   bearer(request: IRequest, response: IResponse, next: NextFunction) {
     passport.authenticate('bearer', { session: false },
-      (error: any, user: UserModel, info: IPassportInfo) => {
+      (error: any, user: Document & IUser, info: IPassportInfo) => {
         if (error) {
           return next(this.server.logger.logRequest(error, request));
         }
@@ -57,7 +59,7 @@ export class Passport {
 
   bearerInvite(request: IRequest, response: IResponse, next: NextFunction) {
     passport.authenticate('bearer-invite', { session: false },
-      (error: any, user: UserModel, info: IPassportInfo) => {
+      (error: any, user: Document & IUser, info: IPassportInfo) => {
         if (error) {
           return next(this.server.logger.logRequest(error, request));
         }
@@ -97,7 +99,7 @@ export class Passport {
 
   localInternal(request: IRequest, response: IResponse, next: NextFunction) {
     passport.authenticate('local-internal', { session: false },
-      (error: any, user: UserModel) => {
+      (error: any, user: Document & IUser) => {
         if (error) {
           return next(this.server.logger.logRequest(error, request));
         }
@@ -110,7 +112,7 @@ export class Passport {
 
   bearerInternal(request: IRequest, response: IResponse, next: NextFunction) {
     passport.authenticate('bearer-internal', { session: false },
-      (error: any, user: UserModel, info: IPassportInfo) => {
+      (error: any, user: Document & IUser, info: IPassportInfo) => {
         if (error) {
           return next(this.server.logger.logRequest(error, request));
         }

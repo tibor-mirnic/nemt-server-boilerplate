@@ -1,7 +1,9 @@
+import { Document } from 'mongoose';
+
 import { Request } from 'express';
-import { IUserBase } from './../../db/models/user-base';
+import { IUser } from './../../../db/models/user/user';
 
 export interface IRequest extends Request {
-  user?: IUserBase;
+  user?: Document & IUser;
   token?: string;
 }
