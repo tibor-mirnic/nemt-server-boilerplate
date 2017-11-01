@@ -1,4 +1,4 @@
-import { Model, Document } from 'mongoose';
+import { Model, Document, DocumentQuery } from 'mongoose';
 
 import { Logger } from './logger';
 import { Util } from './util/util';
@@ -9,6 +9,12 @@ import { ITransformOptions } from './extensions/mongoose';
 import { ProviderExtensions, Operation } from './extensions/provider';
 
 import { IUser } from './../db/models/user/user';
+
+export interface IMongooseDeepPopulateOptions {
+  whitelist?: any[],
+  populate?: any,
+  rewrite?: any
+}
 
 export class Provider<E> {
   model: Model<Document & E>;
@@ -43,13 +49,27 @@ export class Provider<E> {
     return error;
   }
 
+  /**
+   * Mongoose deepPopulate helper
+   * 
+   * @param {DocumentQuery} q 
+   * @param {string|string[]} include 
+   * @param {IMongooseDeepPopulateOptions} [override=undefined]
+   * @returns {DocumentQuery}
+   * 
+   * @memberof Provider
+   */
+  deepPopulate(q: any, include?: string | string[], override?: IMongooseDeepPopulateOptions): any {
+    let includes = Array.isArray(include) ? include.join(' ') : include;
+    return (<any>q).deepPopulate(includes, Object.assign({}, override));
+  }
 
   /**
    * Mongoose toJSON method override
    * 
    * @param {MongooseModel} dbRecord 
    * @param {string[]} excludeProps 
-   * @param {function} processRecord
+   * @param {Function} processRecord
    * @returns {MongooseModel}
    * 
    * @memberof Provider
@@ -135,18 +155,18 @@ export class Provider<E> {
    * Returns record or throws NotFound exception
    * 
    * @param {string} id 
-   * @param {string|string[]} [include=undefined] 
+   * @param {string|string[]} [include=undefined]
+   * @param {IMongooseDeepPopulateOptions} [includeOptions=undefined]
    * @returns {MongooseModel}
    * 
    * @memberof Provider
    */
-  async getById(id: string, include?: string | string[]): Promise<Document & E> {
+  async getById(id: string, include?: string | string[], includeOptions?: IMongooseDeepPopulateOptions): Promise<Document & E> {
     try {
       let q = this.model.findById(id);
 
       if (include) {
-        let includes = Array.isArray(include) ? include.join(' ') : include;
-        q = (<any>q).deepPopulate(includes);
+        q = <DocumentQuery<(Document & E) | null, Document & E>>this.deepPopulate(q, include, includeOptions);
       }
 
       let dbRecord = await q;
@@ -168,15 +188,16 @@ export class Provider<E> {
    * 
    * @param {string} id 
    * @param {string|string[]} [include=undefined] 
+   * @param {IMongooseDeepPopulateOptions} [includeOptions=undefined]
    * @returns {MongooseModel|undefined}
    * 
    * @memberof Provider
    */
-  async findById(id: string, include?: string | string[]): Promise<Document & E | null> {
+  async findById(id: string, include?: string | string[], includeOptions?: IMongooseDeepPopulateOptions): Promise<Document & E | null> {
     try {      
       let dbRecord = await this.findOne({
         '_id': id
-      }, include);      
+      }, include, includeOptions);      
 
       return dbRecord;
     }
@@ -189,21 +210,21 @@ export class Provider<E> {
   /**
    * Returns found record or undefined
    * 
-   * @param {Object} query 
-   * @param {string|string[]} [include=undefined] 
+   * @param {any} query 
+   * @param {string|string[]} [include=undefined]
+   * @param {IMongooseDeepPopulateOptions} [includeOptions=undefined]
    * @returns {MongooseModel|undefined}
    * 
    * @memberof Provider
    */
-  async findOne(query: any, include?: string | string[]): Promise<Document & E | null> {
+  async findOne(query: any, include?: string | string[], includeOptions?: IMongooseDeepPopulateOptions): Promise<Document & E | null> {
     try {
       query = query || {};
 
       let q = this.model.findOne(query);
 
       if (include) {
-        let includes = Array.isArray(include) ? include.join(' ') : include;
-        q = (<any>q).deepPopulate(includes);
+        q = <DocumentQuery<(Document & E) | null, Document & E>>this.deepPopulate(q, include, includeOptions);
       }
 
       let dbRecord = await q; 
@@ -218,13 +239,14 @@ export class Provider<E> {
   /**
    * Creates record
    * 
-   * @param {function} init - (record: MongooseModel) => void
+   * @param {Function} init - (record: MongooseModel) => void
    * @param {string|string[]} [include=undefined]
+   * @param {IMongooseDeepPopulateOptions} [includeOptions=undefined]
    * @returns {MongooseModel}
    * 
    * @memberof Provider
    */
-  async create(init: (record: Document & E) => void, include?: string | string[]): Promise<Document & E> { 
+  async create(init: (record: Document & E) => void, include?: string | string[], includeOptions?: IMongooseDeepPopulateOptions): Promise<Document & E> { 
     try {
       let record = new this.model();
 
@@ -237,7 +259,7 @@ export class Provider<E> {
       }
       
       await record.save();
-      let dbRecord = await this.getById(record._id.toString(), include);
+      let dbRecord = await this.getById(record._id.toString(), include, includeOptions);
       return dbRecord;
     }
     catch(error) {
@@ -249,13 +271,14 @@ export class Provider<E> {
    * Updates record by id
    * 
    * @param {string} id 
-   * @param {function} update - (record: MongooseModel) => void
+   * @param {Function} update - (record: MongooseModel) => void
    * @param {string|string[]} [include=undefined]
+   * @param {IMongooseDeepPopulateOptions} [includeOptions=undefined]
    * @returns {MoongooseModel}
    * 
    * @memberof Provider
    */
-  async update(id: string, update: (record: Document & E) => void, include?: string | string[]): Promise<Document & E> { 
+  async update(id: string, update: (record: Document & E) => void, include?: string | string[], includeOptions?: IMongooseDeepPopulateOptions): Promise<Document & E> { 
     try {
       let dbRecord = await this.getById(id);      
       
@@ -268,7 +291,7 @@ export class Provider<E> {
       }
       
       await dbRecord.save();
-      let updatedRecord = await this.getById(dbRecord._id.toString(), include);
+      let updatedRecord = await this.getById(dbRecord._id.toString(), include, includeOptions);
       return updatedRecord;      
     }
     catch(error) {
@@ -280,7 +303,7 @@ export class Provider<E> {
    * Soft deletes the record by id
    * 
    * @param {string} id 
-   * @param {function} [validate] - async (record: MongooseModel) => boolean
+   * @param {Function} [validate] - async (record: MongooseModel) => boolean
    * 
    * @memberof Provider
    */
@@ -310,7 +333,7 @@ export class Provider<E> {
    * Hard deletes the record by id
    * 
    * @param {string} id 
-   * @param {function} [validate] - async (record: MongooseModel) => boolean
+   * @param {Function} [validate] - async (record: MongooseModel) => boolean
    * 
    * @memberof Provider
    */
@@ -335,7 +358,7 @@ export class Provider<E> {
   /**
    * Hard deletes the record by query
    * 
-   * @param {Object} query   
+   * @param {any} query   
    * 
    * @memberof Provider
    */
@@ -356,16 +379,17 @@ export class Provider<E> {
   /**
    * Query records
    * 
-   * @param {Object} [query]
-   * @param {Number} [page]
-   * @param {Number} [pageSize] 
+   * @param {any} [query]
+   * @param {number} [page]
+   * @param {number} [pageSize] 
    * @param {any} [sort]
    * @param {string|string[]} [include=undefined]
+   * @param {IMongooseDeepPopulateOptions} [includeOptions=undefined]
    * @returns {MongooseModel[]}
    * 
    * @memberof Provider
    */
-  async query(query = {}, page?: number, pageSize?: number, sort?: any, include?: string | string[]): Promise<(Document & E)[]> {
+  async query(query = {}, page?: number, pageSize?: number, sort?: any, include?: string | string[], includeOptions?: IMongooseDeepPopulateOptions): Promise<(Document & E)[]> {
     try {
       let q = this.model.find(query);
 
@@ -378,8 +402,7 @@ export class Provider<E> {
       }
 
       if (include) {
-        let includes = Array.isArray(include) ? include.join(' ') : include;
-        q = (<any>q).deepPopulate(includes);
+        q = <DocumentQuery<(Document & E)[], Document & E>>this.deepPopulate(q, include, includeOptions);
       }
 
       let dbRecords = await q;
@@ -393,7 +416,7 @@ export class Provider<E> {
   /**
    * Returns total record count
    * 
-   * @param {Object} query    
+   * @param {any} query    
    * @returns {number}
    * 
    * @memberof Provider
@@ -416,8 +439,8 @@ export class Provider<E> {
   /**
    * Returns distinct field values
    * 
-   * @param {Object} query 
-   * @returns {Object[]}
+   * @param {any} query 
+   * @returns {any[]}
    * 
    * @memberof Provider
    */
