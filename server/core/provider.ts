@@ -5,7 +5,7 @@ import { Util } from './util/util';
 import { ErrorBase } from './error/base';
 import { DatabaseError } from './error/server';
 import { NotFoundError } from './error/not-found';
-import { ITransformOptions } from './extensions/mongoose';
+import { ITransformOptions, IDocument } from './extensions/mongoose';
 import { ProviderExtensions, Operation } from './extensions/provider';
 
 import { IUser } from './../db/models/user/user';
@@ -76,7 +76,7 @@ export class Provider<E> {
    */
   transformObject(dbRecord: Document & E, excludeProps?: string[]): E {
     if(Array.isArray(excludeProps)) {
-      return <E>dbRecord.toJSON(<ITransformOptions>{ excludeProps: excludeProps, transform: true });
+      (<IDocument & E>dbRecord).overrideToJSON(<ITransformOptions>{ excludeProps: excludeProps });
     }
     
     return <E>dbRecord.toJSON();

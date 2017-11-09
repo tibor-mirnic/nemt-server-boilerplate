@@ -1,4 +1,4 @@
-import { DocumentToObjectOptions } from 'mongoose';
+import { Document, DocumentToObjectOptions } from 'mongoose';
 
 // each model has excludeProps defined as an Array of Strings
 // for additional document processing define processDocument function in model definition
@@ -24,4 +24,8 @@ export const transform = function(doc: any, obj: any, options: ITransformOptions
   }
 
   return obj;
+}
+
+export interface IDocument extends Document {
+  overrideToJSON: (options: any) => void
 }

@@ -31,16 +31,19 @@ export class ModelBase<E> {
     this.deepPopulate = null;
   }
 
-  applyToJSON() {
-    this.schema.set('toJSON', {
+  applyToJSON(options = {}) {
+    let newOptions = Object.assign({}, {
       excludeProps: this.excludeProps,
       transform: transform,
       processDocument: this.processDocument
-    });
+    }, options);
+
+    this.schema.set('toJSON', newOptions);
   }
 
   build(): Model<Document & E> {
-    this.applyToJSON();
+    this.applyToJSON();    
+    this.schema.methods.overrideToJSON = this.applyToJSON.bind(this);
     
     // schema indexes
     if(this.indexes) {
