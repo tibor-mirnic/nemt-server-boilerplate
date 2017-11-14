@@ -161,7 +161,7 @@ export class Server {
       cert: readFileSync(this.environment.keys.cert)
     };
 
-    createServer(options, this.app).listen(this.environment.https.port, () => {
+    createServer(options, <any>this.app).listen(this.environment.https.port, () => {
       this.logger.info(`NODE: HTTPS listening on port ${this.environment.https.port}.`);
     });
   }
