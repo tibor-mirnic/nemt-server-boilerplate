@@ -26,6 +26,6 @@ export const transform = function(doc: any, obj: any, options: ITransformOptions
   return obj;
 }
 
-export interface IDocument extends Document {
-  overrideToJSON: (options: any) => void
+export interface IDocument<E> extends Document {
+  overrideToJSON: (options: any) => E
 }

@@ -31,19 +31,37 @@ export class ModelBase<E> {
     this.deepPopulate = null;
   }
 
-  applyToJSON(options = {}) {
-    let newOptions = Object.assign({}, {
+  build(): Model<Document & E> {
+    let me = this;
+    
+    this.schema.set('toJSON', {
       excludeProps: this.excludeProps,
       transform: transform,
       processDocument: this.processDocument
-    }, options);
+    });
 
-    this.schema.set('toJSON', newOptions);
-  }
+    this.schema.methods.overrideToJSON = function(options: any) {
+      var options = options || {};
 
-  build(): Model<Document & E> {
-    this.applyToJSON();    
-    this.schema.methods.overrideToJSON = this.applyToJSON.bind(this);
+      if(!options.excludeProps) {
+        options.excludeProps = me.excludeProps;
+      }
+      else {        
+        options.excludeProps = (me.excludeProps || []).concat(options.excludeProps);
+      }
+
+      if(!options.transform) {
+        options.transform = transform;
+      }
+
+      if(!options.processDocument) {
+        options.processDocument = me.processDocument;
+      }
+
+      options.transform = true;
+
+      return this.toJSON(options);
+    }
     
     // schema indexes
     if(this.indexes) {

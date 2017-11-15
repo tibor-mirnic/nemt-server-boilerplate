@@ -52,7 +52,7 @@ export class Provider<E> {
    */
   transformObject(dbRecord: Document & E, excludeProps?: string[]): E {
     if(Array.isArray(excludeProps)) {
-      (<IDocument & E>dbRecord).overrideToJSON(<ITransformOptions>{ excludeProps: excludeProps });
+      return (<IDocument<E> & E>dbRecord).overrideToJSON(<ITransformOptions>{ excludeProps: excludeProps });
     }
     
     return <E>dbRecord.toJSON();
