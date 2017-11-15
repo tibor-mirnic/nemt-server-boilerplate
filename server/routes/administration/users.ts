@@ -21,7 +21,7 @@ export class UserRouter extends Router {
 
     }
     catch(error) {
-      next(this.server.logger.logRequest(error, request));
+      next(error);
     }
   }
 }

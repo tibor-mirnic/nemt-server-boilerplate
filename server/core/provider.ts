@@ -2,7 +2,6 @@ import { Model, Document, DocumentQuery } from 'mongoose';
 
 import { Logger } from './logger';
 import { Util } from './util/util';
-import { ErrorBase } from './error/base';
 import { DatabaseError } from './error/server';
 import { NotFoundError } from './error/not-found';
 import { ITransformOptions, IDocument } from './extensions/mongoose';
@@ -21,32 +20,9 @@ export class Provider<E> {
   userId?: string | null;
   logger?: Logger | null;
 
-  constructor(model: Model<Document & E>, userId?: string | null, logger?: Logger | null) {
+  constructor(model: Model<Document & E>, userId?: string | null) {
     this.model = model;
-    this.userId = userId;    
-    this.logger = logger;
-  }
-
-  handleError(error: any): ErrorBase {
-    if(typeof(error) === 'string') {
-      error = new DatabaseError((error || '').toString());
-    }
-    
-    if(error instanceof Error && (
-        error.name === 'Error' ||
-        error.name === 'ReferenceError'||
-        error.name === 'MongoError' ||
-        error.name === 'MongooseError'||
-        error.name === 'CastError')
-    ) {
-      error = new DatabaseError(error.message || error.stack, error.name);
-    }
-
-    if(this.logger) {
-      this.logger.log(error);
-    }
-
-    return error;
+    this.userId = userId;
   }
 
   /**
@@ -178,7 +154,7 @@ export class Provider<E> {
       return dbRecord;
     }
     catch(error) {
-      throw this.handleError(error);
+      throw error;
     }
   }
 
@@ -202,7 +178,7 @@ export class Provider<E> {
       return dbRecord;
     }
     catch(error) {
-      throw this.handleError(error);
+      throw error;
     }
   }
 
@@ -232,7 +208,7 @@ export class Provider<E> {
       return dbRecord;
     }
     catch(error) {
-      throw this.handleError(error);
+      throw error;
     }
   }
 
@@ -263,7 +239,7 @@ export class Provider<E> {
       return dbRecord;
     }
     catch(error) {
-      throw this.handleError(error);
+      throw error;
     }
   }
 
@@ -295,7 +271,7 @@ export class Provider<E> {
       return updatedRecord;      
     }
     catch(error) {
-      throw this.handleError(error);
+      throw error;
     }
   }
 
@@ -325,7 +301,7 @@ export class Provider<E> {
       await dbRecord.save();            
     }
     catch(error) {
-      throw this.handleError(error);
+      throw error;
     }
   }
 
@@ -351,7 +327,7 @@ export class Provider<E> {
       await dbRecord.remove();
     }
     catch(error) {
-      throw this.handleError(error);
+      throw error;
     }
   }
 
@@ -371,7 +347,7 @@ export class Provider<E> {
       }
     }
     catch(error) {
-      throw this.handleError(error);
+      throw error;
     }
   }
   
@@ -409,7 +385,7 @@ export class Provider<E> {
       return dbRecords;
     }
     catch(error) {
-      throw this.handleError(error);
+      throw error;
     }
   }
 
@@ -432,7 +408,7 @@ export class Provider<E> {
       return count;
     }
     catch(error) {
-      throw this.handleError(error);
+      throw error;
     }
   } 
 
@@ -455,7 +431,7 @@ export class Provider<E> {
       return distinct;
     }
     catch(error) {
-      throw this.handleError(error);
+      throw error;
     }
   }
 
@@ -470,7 +446,7 @@ export class Provider<E> {
       return result;
     }
     catch(error) {
-      throw this.handleError(error);
+      throw error;
     }
   }
 }

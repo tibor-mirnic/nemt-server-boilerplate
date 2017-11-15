@@ -5,7 +5,6 @@ import { Logger as WinstonLogger, LoggerInstance, transports } from 'winston';
 
 import { IRequest } from './models/express/request';
 import { ErrorBase } from './error/base';
-import { InternalServerError } from './error/server';
 
 let logger: LoggerInstance; 
 
@@ -72,7 +71,7 @@ export class Logger {
     this.end(error);
   }
 
-  logRequest(error: any, request: IRequest): ErrorBase {
+  logRequest(error: any, request: IRequest) {
     //log user      
     this.begin();
 
@@ -82,17 +81,6 @@ export class Logger {
     logger.info(`Payload: ${JSON.stringify(request.body)}`);
     
     this.end(error);
-    
-    if(typeof(error) === 'string') {
-      error = new InternalServerError(error, 'Execution');
-    }
-    else if(error instanceof Error && (
-      error.name === 'Error' ||
-      error.name === 'ReferenceError' ||
-      error.name === 'TypeError')
-    ) {
-      error = new InternalServerError((error.message || error.stack) || '', error.name);
-    }
 
     return error;
   }

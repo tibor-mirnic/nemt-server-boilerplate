@@ -5,6 +5,6 @@ import { IToken } from './../db/models/token/token';
 export class TokenProvider extends Provider<IToken> {
 
   constructor(server: Server) {
-    super(server.models.token, null, server.logger);
+    super(server.models.token, null);
   }
 }

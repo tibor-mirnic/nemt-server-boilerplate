@@ -26,7 +26,7 @@ export class Passport {
     passport.authenticate('local', { session: false },
       (error: any, user: Document & IUser, info: IPassportInfo) => {
         if (error) {
-          return next(this.server.logger.logRequest(error, request));
+          return next(error);
         }
         
         request.user = user;
@@ -39,7 +39,7 @@ export class Passport {
     passport.authenticate('bearer', { session: false },
       (error: any, user: Document & IUser, info: IPassportInfo) => {
         if (error) {
-          return next(this.server.logger.logRequest(error, request));
+          return next(error);
         }
 
         if(!user) {
@@ -61,7 +61,7 @@ export class Passport {
     passport.authenticate('bearer-invite', { session: false },
       (error: any, user: Document & IUser, info: IPassportInfo) => {
         if (error) {
-          return next(this.server.logger.logRequest(error, request));
+          return next(error);
         }
 
         if(!user) {
@@ -83,7 +83,7 @@ export class Passport {
     passport.authenticate('bearer-onboard', { session: false },
       (error: any, token: string) => {
         if (error) {
-          return next(this.server.logger.logRequest(error, request));
+          return next(error);
         }
 
         if(!token) {
@@ -101,7 +101,7 @@ export class Passport {
     passport.authenticate('local-internal', { session: false },
       (error: any, user: Document & IUser) => {
         if (error) {
-          return next(this.server.logger.logRequest(error, request));
+          return next(error);
         }
         
         request.user = user;
@@ -114,7 +114,7 @@ export class Passport {
     passport.authenticate('bearer-internal', { session: false },
       (error: any, user: Document & IUser, info: IPassportInfo) => {
         if (error) {
-          return next(this.server.logger.logRequest(error, request));
+          return next(error);
         }
 
         if(!user) {

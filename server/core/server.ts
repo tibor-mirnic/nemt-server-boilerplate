@@ -24,6 +24,8 @@ import { Passport } from './auth/passport';
 import { ModelBuilder } from './../db/models';
 import { Util } from './util/util';
 
+import { IRequest } from './../core/models/express/request';
+import { IResponse } from './../core/models/express/response';
 import { SuccessHandler } from './handlers/success';
 import { ErrorHandler } from './handlers/error';
 
@@ -151,8 +153,16 @@ export class Server {
   }
 
   useHandlers() {
-    this.app.use(SuccessHandler.process.bind(SuccessHandler.process));
-    this.app.use(ErrorHandler.process.bind(ErrorHandler.process));
+    let successHandler = new SuccessHandler(this);
+    let errorHandler = new ErrorHandler(this);
+    
+    this.app.use((request: IRequest, response: IResponse, next: express.NextFunction) => {
+      successHandler.process(request, response, next);
+    });
+    
+    this.app.use((error: any, request: IRequest, response: IResponse, next: express.NextFunction) => {
+      errorHandler.process(error, request, response, next);
+    });
   }
 
   startServer() {

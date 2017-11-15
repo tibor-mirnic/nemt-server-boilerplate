@@ -5,6 +5,6 @@ import { IUser } from './../db/models/user/user';
 export class UserProvider extends Provider<IUser> {
 
   constructor(server: Server, userId: string) {
-    super(server.models.users, userId, server.logger);
+    super(server.models.users, userId);
   }
 }
