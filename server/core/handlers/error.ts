@@ -35,8 +35,7 @@ export class ErrorHandler {
     else if (error instanceof NotFoundError) {
       response.status(404).send(error.toJSON());
     }
-    else if (error instanceof ServerError
-      || error instanceof InternalServerError) {
+    else if (error instanceof ServerError) {
       response.status(500).send(this.defaultError);
     }
     else if(error instanceof Error) {
