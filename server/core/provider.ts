@@ -340,7 +340,7 @@ export class Provider<E> {
    */
   async deleteHardByQuery(query: any): Promise<void> {
     try {
-      let removedRecord = this.model.remove(query);
+      let removedRecord = await this.model.findOneAndRemove(query);
 
       if(!removedRecord) {
         throw new NotFoundError('Record not found');
