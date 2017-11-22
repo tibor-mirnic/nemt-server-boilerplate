@@ -3,7 +3,7 @@ let deepPopulate = require('mongoose-deep-populate');
 import * as mongoose from 'mongoose';
 import { Connection, Schema, SchemaDefinition, Document, Model } from 'mongoose';
 
-import { transform } from './../extensions/mongoose';
+import { ITransformOptions } from './../extensions/mongoose';
 
 import { InternalServerError } from './../error/server';
 
@@ -14,7 +14,7 @@ export class ModelBase<E> {
   public schema: Schema;
 
   public excludeProps?: string[];
-  public processDocument?: (doc: any, obj: any, options: any) => void; // function for mongoose, must be es5
+  public processDocument?: (doc: Document & E, obj: any & E, options: ITransformOptions<E>) => void; // function for mongoose, must be es5
   public indexes?: any[];
   public deepPopulate?: any;
 
@@ -33,35 +33,49 @@ export class ModelBase<E> {
 
   build(): Model<Document & E> {
     let me = this;
-    
+
     this.schema.set('toJSON', {
-      excludeProps: this.excludeProps,
-      transform: transform,
-      processDocument: this.processDocument
-    });
+      'transform': function(doc: Document & E, obj: any & E, options: ITransformOptions<E>) {
+        var options = options || {};
+        
+        // delete default props
+        delete obj['__v'];
+        
+        // additional document processing
+        if(!options.processDocument) {
+          options.processDocument = me.processDocument;
+        }
+        if(typeof(options.processDocument) === 'function') {
+          options.processDocument(doc, obj, options);
+          
+          // clear processDocument for Other
+          if(!options.applyProcessDocumentToAll) {
+            options.processDocument = undefined;
+          }
+        }
+        
+        // delete defined properties
+        if(!options.excludeProps) {
+          options.excludeProps = me.excludeProps || [];
+        }
+        else {        
+          options.excludeProps = (me.excludeProps || []).concat(options.excludeProps);
+        }
 
-    this.schema.methods.overrideToJSON = function(options: any) {
-      var options = options || {};
+        if(Array.isArray(options.excludeProps)) {
+          options.excludeProps.forEach((prop: string) => {
+            delete obj[prop];
+          });
 
-      if(!options.excludeProps) {
-        options.excludeProps = me.excludeProps;
+          // clear excludeProps for Other
+          if(!options.applyExcludePropsForAll) {
+            options.excludeProps = undefined;
+          }
+        }       
+      
+        return obj;
       }
-      else {        
-        options.excludeProps = (me.excludeProps || []).concat(options.excludeProps);
-      }
-
-      if(!options.transform) {
-        options.transform = transform;
-      }
-
-      if(!options.processDocument) {
-        options.processDocument = me.processDocument;
-      }
-
-      options.transform = true;
-
-      return this.toJSON(options);
-    }
+    });    
     
     // schema indexes
     if(this.indexes) {

@@ -1,31 +1,11 @@
 import { Document, DocumentToObjectOptions } from 'mongoose';
 
-// each model has excludeProps defined as an Array of Strings
-// for additional document processing define processDocument function in model definition
+// each model has excludeProps? defined as an Array of Strings
+// for additional document processing define processDocument? function in model definition
 
-export interface ITransformOptions extends DocumentToObjectOptions {
+export interface ITransformOptions<E> extends DocumentToObjectOptions {
+  processDocument?: (doc: Document & E, obj: any & E, options: ITransformOptions<E>) => void;
+  applyProcessDocumentToAll?: boolean;
   excludeProps?: string[];
-  processDocument?: (doc: any, obj: any, options: any) => void;
-  transform?: any;
-}
-
-export const transform = function(doc: any, obj: any, options: ITransformOptions) {
-  // delete default props
-  delete obj['__v'];
-
-  if(typeof(options.processDocument) === 'function') {
-    options.processDocument(doc, obj, options);
-  }
-
-  if(Array.isArray(options.excludeProps)) {
-    options.excludeProps.forEach((prop: string) => {
-      delete obj[prop];
-    });
-  }
-
-  return obj;
-}
-
-export interface IDocument<E> extends Document {
-  overrideToJSON: (options: any) => E
+  applyExcludePropsForAll?: boolean;
 }
