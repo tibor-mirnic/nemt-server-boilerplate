@@ -50,9 +50,9 @@ export class Provider<E> {
    * 
    * @memberof Provider
    */
-  transformObject(dbRecord: Document & E, excludeProps?: string[]): E {
-    if(Array.isArray(excludeProps)) {
-      return <E>dbRecord.toJSON(<ITransformOptions<E>>{ excludeProps: excludeProps });
+  transformObject(dbRecord: Document & E, options?: ITransformOptions<E>): E {
+    if(options) {
+      return <E>dbRecord.toJSON(options);
     }
     
     return <E>dbRecord.toJSON();
@@ -67,9 +67,9 @@ export class Provider<E> {
    * 
    * @memberof Provider
    */
-  transformObjects(dbRecords: (Document & E)[], excludeProps?: string[]): E[] {
+  transformObjects(dbRecords: (Document & E)[], options?: ITransformOptions<E>): E[] {
     return dbRecords.map((dbRecord: Document & E) => {
-      return this.transformObject(dbRecord, excludeProps);
+      return this.transformObject(dbRecord, options);
     });
   }
 

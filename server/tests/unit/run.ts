@@ -35,7 +35,9 @@ let run = async () => {
     }
 
     let roles = await rp.query();
-    // let excluded = rp.transformObjects(roles, ['isDeleted', 'type']);
+    // let excluded = rp.transformObjects(roles, {
+    //   excludeProps: ['isDeleted', 'type']
+    // });
     let excluded = rp.transformObjects(roles);
 
     console.log(excluded.length);
