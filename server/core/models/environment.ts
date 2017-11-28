@@ -20,6 +20,7 @@ export interface IMongoDb {
 export interface ICertificationKeys {
   key: string;
   cert: string;
+  passphrase: string;
 }
 
 export interface IGoogleConfiguration {

@@ -11,7 +11,7 @@ export const test: IEnvironment = {
   },
   https: {
     host: '127.0.0.0.1',
-    port: 8043
+    port: 8043    
   },
   mongoDb: {
     url: '127.0.0.1:27017',
@@ -22,8 +22,9 @@ export const test: IEnvironment = {
   corsRegex: '.*',
   baseUrl: 'https://localhost:4202',
   keys: {
-    key: join(__dirname, '../keys/private.key'),
-    cert: join(__dirname, '../keys/certificate.pem')
+    key: join(__dirname, '../keys/key.pem'),
+    cert: join(__dirname, '../keys/cert.pem'),
+    passphrase: 'boilerplate'
   },
   googleConfiguration: {
     clientId: 'some id'

@@ -22,8 +22,9 @@ export const local: IEnvironment = {
   corsRegex: '.*',
   baseUrl: 'https://localhost:4202',
   keys: {
-    key: join(__dirname, '../keys/private.key'),
-    cert: join(__dirname, '../keys/certificate.pem')
+    key: join(__dirname, '../keys/key.pem'),
+    cert: join(__dirname, '../keys/cert.pem'),
+    passphrase: 'boilerplate'
   },
   googleConfiguration: {
     clientId: 'some id'

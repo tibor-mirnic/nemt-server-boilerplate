@@ -4,7 +4,7 @@ let busboy = require('connect-busboy');
 import * as express from 'express';
 import { Document } from 'mongoose';
 import { join } from 'path';
-import { createServer } from 'https';
+import { createServer, ServerOptions } from 'https';
 import { readFileSync } from 'fs-extra';
 
 import * as cors from 'cors';
@@ -166,11 +166,12 @@ export class Server {
   }
 
   startServer() {
-    let options = {
+    let options: ServerOptions = {
       key: readFileSync(this.environment.keys.key),
-      cert: readFileSync(this.environment.keys.cert)
+      cert: readFileSync(this.environment.keys.cert),
+      passphrase: this.environment.keys.passphrase
     };
-
+    
     createServer(options, <any>this.app).listen(this.environment.https.port, () => {
       this.logger.info(`NODE: HTTPS listening on port ${this.environment.https.port}.`);
     });
