@@ -1,4 +1,5 @@
 import { Router as ExpressRouter } from 'express';
+import { IRequest } from './../../core/models/express/request';
 
 import { Server } from './../server';
 import { NotImplementedError } from './../error/user-friendly';
@@ -21,5 +22,14 @@ export class Router {
     this.initRoutes();
 
     return this.router;
+  }
+
+  getUserId(request: IRequest): string {
+    let id = this.server.systemUserId;
+    if(request.user) {
+      id = request.user._id;
+    }
+
+    return id;
   }
 }

@@ -17,11 +17,12 @@ import { Logger } from './logger';
 import { IEnvironment } from './models/environment';
 import { Environment } from './environment';
 import { IConstants } from './models/constants';
-import { IModels } from './../db/models';
 import { ICache } from './models/cache';
 import { DbContext } from './db/db-context';
 import { Passport } from './auth/passport';
-import { ModelBuilder } from './../db/models';
+
+import { FactoryBuilder, IFactories } from './../db/factories';
+
 import { Util } from './util/util';
 
 import { IRequest } from './../core/models/express/request';
@@ -39,11 +40,11 @@ import { UserCache } from './../cache/user';
 import { ReportCache } from './../core/cache/report';
 import { TokenCache } from './../core/cache/token';
 
-// providers
-import { RoleProvider } from './../providers/role';
+// repositories
+import { RoleRepository } from './../repositories/role';
 import { IRole } from './../db/models/role/role';
 
-import { UserProvider } from './../providers/user';
+import { UserRepository } from './../repositories/user';
 
 export class Server {
   serverLogPath: string;
@@ -58,7 +59,7 @@ export class Server {
   constants: IConstants;
 
   dbContext: DbContext;
-  models: IModels;
+  factories: IFactories;
 
   passport: Passport;
 
@@ -74,7 +75,7 @@ export class Server {
     this.environment = Environment.load();
 
     this.dbContext = new DbContext(this.environment, this.logger);
-    this.models = ModelBuilder.build(this.dbContext.getConnection());
+    this.factories = FactoryBuilder.build(this.dbContext.getConnection());
     
     // build middleware
     this.useHeaders();
@@ -214,18 +215,19 @@ export class Server {
   // }
 
   async createSystemUser(): Promise<void> {
-    let up = new UserProvider(this, this.systemUserId);
+    let ur = new UserRepository(this, this.systemUserId);
 
-    let system = await up.findOne({
+    let system = (await ur.databaseModel.findOne({
       'isSystem': true
-    });
+    }));
 
     if(!system) {
-      system = await up.create(user => {
+      system = await ur.create(user => {
         user.email = 'system';
         user.firstName = 'SYSTEM';
         user.lastName = 'SYSTEM';
         user.isSystem = true;
+        user.isDeleted = true;
         user.role = null;
       });
     }
@@ -234,14 +236,14 @@ export class Server {
   }
 
   async upsertSuperAdminRole(): Promise<Document & IRole> {
-    let rp = new RoleProvider(this, this.systemUserId);
+    let rr = new RoleRepository(this, this.systemUserId);
 
-    let superAdminRole = await rp.findOne({
+    let superAdminRole = await rr.databaseModel.findOne({
       'type': 'SUPER_ADMIN'
     });
 
     if(!superAdminRole) {
-      superAdminRole = await rp.create(role => {
+      superAdminRole = await rr.create(role => {
         role.type = 'SUPER_ADMIN';
         role.description = 'Super administrator';
         role.permissions = permissions.map(permission => {
@@ -253,7 +255,7 @@ export class Server {
       });
     }
     else {
-      superAdminRole = await rp.update(superAdminRole._id.toString(), role => {
+      superAdminRole = await rr.update(superAdminRole._id.toString(), role => {
         role.permissions = permissions.map(permission => {
           return {
             'type': permission.type,
@@ -267,14 +269,14 @@ export class Server {
   }  
 
   async upsertSuperAdminUser(superAdminRole: Document & IRole) {
-    let up = new UserProvider(this, this.systemUserId);
+    let ur = new UserRepository(this, this.systemUserId);
 
-    let admin = await up.findOne({
+    let admin = await ur.databaseModel.findOne({
       'isAdmin': true
     });
 
     if(!admin) {
-      admin = await up.create(user => {
+      admin = await ur.create(user => {
         user.email = this.environment.superAdmin.email;
         user.firstName = this.environment.superAdmin.firstName;
         user.lastName = this.environment.superAdmin.lastName;
@@ -284,7 +286,7 @@ export class Server {
       });
     }
     else {
-      admin = await up.update(admin._id.toString(), user => {
+      admin = await ur.update(admin._id.toString(), user => {
         user.email = this.environment.superAdmin.email;
         user.firstName = this.environment.superAdmin.firstName;
         user.lastName = this.environment.superAdmin.lastName;

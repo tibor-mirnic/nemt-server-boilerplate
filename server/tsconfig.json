@@ -6,8 +6,8 @@
     
     "declaration": true,
     "sourceMap": true,
-    "outDir": "./dist",
-    "rootDir": "./server",
+    "outDir": "./../dist",
+    "rootDir": "./",
     
     "strict": true,    
     "noUnusedLocals": true,
@@ -18,14 +18,13 @@
     "emitDecoratorMetadata": true,  
 
     "typeRoots": [
-      "./server/node_modules/@types"
+      "./node_modules/@types"
     ]
   },
   "include": [
-    "server/**/*"
+    "**/*"
   ],
-  "exclude": [
-    "dist/**/*",
-    "server/node_modules/**/*"
+  "exclude": [    
+    "node_modules/**/*"
   ]
 }

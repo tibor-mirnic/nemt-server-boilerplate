@@ -23,11 +23,11 @@ export const UserSchema: SchemaDefinition = {
     default: null
   },
   isSystem: {
-    type: String,
+    type: Boolean,
     default: false
   },
   isAdmin: {
-    type: String,
+    type: Boolean,
     default: false
   },
   isDeleted: {

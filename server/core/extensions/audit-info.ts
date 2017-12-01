@@ -6,7 +6,7 @@ export enum Operation {
   DELETE = 2
 }
 
-export class ProviderExtensions {
+export class AuditInfo {
   static beforeCreate(model: IAuditInfo, userId: string) {
     let now = new Date();
     model.createdAt = now;
@@ -35,13 +35,13 @@ export class ProviderExtensions {
   static beforeSave(model: any, userId: string, operation: Operation) {
     switch(operation) {
       case Operation.CREATE: {
-        return ProviderExtensions.beforeCreate(model, userId);
+        return AuditInfo.beforeCreate(model, userId);
       }
       case Operation.UPDATE: {
-        return ProviderExtensions.beforeUpdate(model, userId);      
+        return AuditInfo.beforeUpdate(model, userId);      
       }
       case Operation.DELETE: {
-        return ProviderExtensions.beforeDelete(model, userId);    
+        return AuditInfo.beforeDelete(model, userId);    
       }
       default: {
         return model;

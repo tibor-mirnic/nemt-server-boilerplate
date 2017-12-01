@@ -19,7 +19,12 @@
       "type": "node",
       "request": "launch",
       "name": "Unit tests",
-      "program": "${workspaceRoot}/server/tests/unit/run.ts",
+      "args": ["${workspaceRoot}/server/tests/unit/run.ts"],
+      "runtimeArgs": [
+        "--nolazy",
+        "-r",
+        "ts-node/register"
+      ],
       "cwd": "${workspaceRoot}/server"
     }
   ]

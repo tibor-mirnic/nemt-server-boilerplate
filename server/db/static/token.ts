@@ -1,8 +1,6 @@
 export const tokenTypes: string[] = [
   'access',
-  'admin',
-  'admin-register',
-  'onboard',
+  'admin',    
   'register',
   'reset-password'
 ];
