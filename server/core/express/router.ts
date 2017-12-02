@@ -1,7 +1,8 @@
 import { Router as ExpressRouter } from 'express';
-import { IRequest } from './../../core/models/express/request';
 
 import { Server } from './../server';
+import { IRequest } from './../../core/models/express/request';
+import { IResponse } from './../../core/models/express/response';
 import { NotImplementedError } from './../error/user-friendly';
 
 export class Router {
@@ -31,5 +32,17 @@ export class Router {
     }
 
     return id;
+  }
+
+  handleError(error: any, request: IRequest, response: IResponse): any {
+    let emptyObject = JSON.stringify({});
+    response.onErrorRequestData = {
+      userIdentifier: request.user ? request.user.email : undefined,
+      url: request.originalUrl,
+      params: emptyObject === JSON.stringify(request.params) ? undefined : request.params,
+      body: emptyObject === JSON.stringify(request.body) ? undefined : request.body
+    }
+
+    return error;
   }
 }

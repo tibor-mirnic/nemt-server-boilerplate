@@ -3,7 +3,7 @@ require('winston-daily-rotate-file');
 import * as path from 'path';
 import { Logger as WinstonLogger, LoggerInstance, transports } from 'winston';
 
-import { IRequest } from './models/express/request';
+import { IResponse } from './models/express/response';
 import { ErrorBase } from './error/base';
 
 let logger: LoggerInstance; 
@@ -42,15 +42,7 @@ export class Logger {
     }
   }
 
-  info(msg: string) {
-    logger.info(msg);
-  }
-
-  begin() {
-    logger.info(`******************** ENTRY START ********************`);
-  }
-  
-  end(error: any) {
+  prettifyError(error: any): string {
     let msg = null;
     if (typeof (error) === 'string') {
       msg = error;
@@ -62,26 +54,42 @@ export class Logger {
       msg = error.stack || error.message;
     }
 
-    logger.error(msg);
-    logger.info(`******************** ENTRY END ********************`);
+    return msg;
   }
 
-  log(error: any) {
-    this.begin();
-    this.end(error);
+  info(msg: string) {
+    logger.info(msg);
   }
 
-  logRequest(error: any, request: IRequest) {
-    //log user      
-    this.begin();
+  error(error: any) {
+    logger.error(this.prettifyError(error));
+  }
 
-    logger.info(`User: ${request.user ? request.user.email : 'Unknown'}`);
-    logger.info(`Url: ${request.url}`);
-    logger.info(`Params: ${JSON.stringify(request.params)}`);
-    logger.info(`Payload: ${JSON.stringify(request.body)}`);
+  logRequest(error: any, response: IResponse) {
+    let errorMsg = this.prettifyError(error);
+    if(response.onErrorRequestData) {
+      let msg = '\n';
+      
+      if(response.onErrorRequestData.userIdentifier) {
+        msg += `  User: ${response.onErrorRequestData.userIdentifier}\n`;
+      }
+
+      msg += `  Url: ${response.onErrorRequestData.url}\n`;
+
+      if(response.onErrorRequestData.params) {
+        msg += `  Params: ${JSON.stringify(response.onErrorRequestData.params)}\n`;
+      }
+
+      if(response.onErrorRequestData.body) {
+        msg += `  Payload: ${JSON.stringify(response.onErrorRequestData.body)}\n`
+      }
+
+      msg += `  ${errorMsg}`;
     
-    this.end(error);
-
-    return error;
+      logger.error(msg);
+    }
+    else {
+      logger.error(errorMsg);
+    }
   }
 }

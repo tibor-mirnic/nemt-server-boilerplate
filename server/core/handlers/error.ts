@@ -49,7 +49,7 @@ export class ErrorHandler {
 
     // log error
     if(!isUserFriendly) {
-      this.server.logger.logRequest(error, request);
+      this.server.logger.logRequest(error, response);
     }
   }
 }
