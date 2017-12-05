@@ -8,8 +8,8 @@
     "start-windows": "SET NODE_ENV=local&& ts-node run.ts",
     "test": "ts-node tests/run.ts"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "mirnictibor@gmail.com",
+  "license": "MIT",
   "dependencies": {
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.18.2",
