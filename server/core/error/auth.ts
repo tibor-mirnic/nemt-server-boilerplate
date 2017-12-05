@@ -8,6 +8,6 @@ export class AuthenticationError extends ErrorBase {
 
 export class GoogleAuthenticationError extends AuthenticationError {
   constructor(message = 'Google Authentication Error') {
-    super(message, 'Authentication failed');
+    super(message, 'Google Authentication');
   }
 }

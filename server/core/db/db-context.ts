@@ -92,7 +92,7 @@ export class DbContext {
   checkConnection(request: IRequest, response: IResponse, next: NextFunction) {
     if(!connectionEstablished) {
       this.logger.info('MONGO - Database connection could not be established!');
-      return next(new DatabaseError('Could not connect to the database!', 'Connection'));
+      return next(new DatabaseError('Could not connect to the database!'));
     }
 
     return next();

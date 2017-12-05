@@ -7,14 +7,14 @@ export class ServerError extends ErrorBase {
 }
 
 export class DatabaseError extends ServerError {
-  constructor(message = 'Database error thrown!', name = 'Database Error') {
-    super(message, name);
+  constructor(message = 'Database error thrown!') {
+    super(message, 'Database Error');
   }
 }
 
 export class InternalServerError extends ServerError {
-  constructor(message = 'Internal server error thrown!', name = 'Internal Server Error') {
-    super(message, name);
+  constructor(message = 'Internal server error thrown!') {
+    super(message, 'Internal Server Error');
   }
 }
 
