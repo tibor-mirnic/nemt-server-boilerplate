@@ -2,7 +2,7 @@
   "name": "typescript-boilerplate",
   "version": "1.0.0",
   "description": "",
-  "main": "run.js",
+  "main": "run.ts",
   "scripts": {
     "start": "NODE_ENV=local ts-node run.ts",
     "start-windows": "SET NODE_ENV=local&& ts-node run.ts",
