@@ -6,7 +6,7 @@ export class RoleRepository extends Repository<IRole> {
 
   constructor(server: Server, userId: string) {
     super({
-      factory: server.factories.roles,
+      factory: server.factories.role,
       userId: userId,
       aggregationQuery: {
         match: {

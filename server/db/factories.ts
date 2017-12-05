@@ -5,16 +5,16 @@ import { UserFactory } from './models/user/factory';
 import { TokenFactory } from './models/token/factory';
 
 export interface IFactories {
-    roles: RoleFactory;
-    users: UserFactory;
+    role: RoleFactory;
+    user: UserFactory;
     token: TokenFactory;
 }
 
 export class FactoryBuilder {
   static build(connection: Connection): IFactories {
     return {      
-      roles: new RoleFactory(connection),
-      users: new UserFactory(connection),
+      role: new RoleFactory(connection),
+      user: new UserFactory(connection),
       token: new TokenFactory(connection)
     }
   }

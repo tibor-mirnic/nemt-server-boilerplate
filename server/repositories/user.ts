@@ -6,7 +6,7 @@ export class UserRepository extends Repository<IUser> {
 
   constructor(server: Server, userId: string) {
     super({
-      factory: server.factories.users,
+      factory: server.factories.user,
       userId: userId,
       aggregationQuery: {
         lookup: [{
