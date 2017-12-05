@@ -8,7 +8,7 @@ export class RoleFactory extends Factory<IRole> {
   constructor(connection: Connection) {
     super({
       connection: connection,
-      name: 'role',
+      name: 'Role',
       definition: RoleSchema,
       indexes: [{
         fields: {

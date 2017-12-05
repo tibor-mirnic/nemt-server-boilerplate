@@ -8,7 +8,7 @@ export class UserFactory extends Factory<IUser> {
   constructor(connection: Connection) {
     super({
       connection: connection,
-      name: 'user',
+      name: 'User',
       definition: UserSchema,
       indexes: [{
         fields: {

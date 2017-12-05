@@ -8,7 +8,7 @@ export class TokenFactory extends Factory<IToken> {
   constructor(connection: Connection) {
     super({
       connection: connection,
-      name: 'token',
+      name: 'Token',
       definition: TokenSchema,
       indexes: [{
         fields: {
