@@ -181,9 +181,9 @@ export class Server {
   // add all database caches
   initCache() {
     this.cache = {      
-      reportCache: ReportCache,
-      tokenCache: TokenCache,
-      userCache: new UserCache(this)
+      report: ReportCache,
+      token: TokenCache,
+      user: new UserCache(this)
     };
   }
 
