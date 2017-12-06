@@ -28,7 +28,7 @@ export class Router {
   getUserId(request: IRequest): string {
     let id = this.server.systemUserId;
     if(request.user) {
-      id = request.user._id;
+      id = request.user._id.toString();
     }
 
     return id;
