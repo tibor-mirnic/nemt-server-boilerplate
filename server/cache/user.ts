@@ -16,30 +16,21 @@ export class UserCache {
     this.repository = new UserRepository(server, server.systemUserId);
   }
 
-  async get(id: string) {
-    let user;
+  async get(id: string): Promise<IUser> {    
     try {
-      if(!id) {
-        throw new UserFriendlyError('Unknown user');
-      }
-
-      if(typeof(id) === 'object') {
-        id = (<any>id).toString();
-      }
-
-      user = cache.get(id);
+      let user = cache.get(id);
       
       if(!user) {
         let dbUser = await this.repository.getById(id);
         user = this.repository.transformObject(dbUser);
         cache.set(id, user);
-      }      
+      }
+      
+      return user;
     }
     catch(error) {
-      user = null;
+      throw error;
     }
-
-    return user;
   }
 
   invalidate() {
