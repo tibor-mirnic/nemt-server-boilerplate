@@ -1,6 +1,5 @@
 import * as passport from 'passport';
 import { NextFunction } from 'express';
-import { Document } from 'mongoose';
 
 import { Server } from './../server';
 import { IRequest } from './../models/express/request';
@@ -24,7 +23,7 @@ export class Passport {
 
   local(request: IRequest, response: IResponse, next: NextFunction) {
     passport.authenticate('local', { session: false },
-      (error: any, user: Document & IUser, info: IPassportInfo) => {
+      (error: any, user: IUser, info: IPassportInfo) => {
         if (error) {
           return next(error);
         }
@@ -37,7 +36,7 @@ export class Passport {
 
   bearer(request: IRequest, response: IResponse, next: NextFunction) {
     passport.authenticate('bearer', { session: false },
-      (error: any, user: Document & IUser, info: IPassportInfo) => {
+      (error: any, user: IUser, info: IPassportInfo) => {
         if (error) {
           return next(error);
         }

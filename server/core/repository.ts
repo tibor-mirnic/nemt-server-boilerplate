@@ -6,6 +6,7 @@ import { IRepositoryConfiguration, IAggregationQuery, transformAggregationQuery 
 import { AuditInfo, Operation } from './extensions/audit-info';
 import { DatabaseError } from './error/server';
 import { NotFoundError } from './error/not-found';
+import { IIdentifier } from './models/db/identifier';
 
 /**
  * Helper class for Mongoose
@@ -14,7 +15,7 @@ import { NotFoundError } from './error/not-found';
  * @class Repository
  * @template E Model interface
  */
-export class Repository<E> {
+export class Repository<E extends IIdentifier> {
   private factory: Factory<E>;
   private userId?: string;
   private aggreagationQuery: IAggregationQuery;
@@ -27,7 +28,11 @@ export class Repository<E> {
   constructor(config: IRepositoryConfiguration<E>) {
     this.factory = config.factory;
     this.userId = config.userId;
-    this.aggreagationQuery = config.aggregationQuery;
+    this.aggreagationQuery = merge(<IAggregationQuery>{
+      project: {
+        '__v': 0
+      }
+    }, config.aggregationQuery);
     this.processDocument = config.processDocument;
   }
   
@@ -105,13 +110,13 @@ export class Repository<E> {
    * Returns model using aggregate
    * 
    * @param {any} [match={}] 
-   * @returns {(Promise<Document & E | null>)} 
+   * @returns {(Promise<E | null>)} 
    * @memberof Repository
    */
-  async findOne(match = {}): Promise<Document & E | null> {
+  async findOne(match = {}): Promise<E | null> {
     try {      
       let query = transformAggregationQuery(merge({}, this.aggreagationQuery, <IAggregationQuery>{ match: match }), false);
-      let models = <(Document & E)[]>(await this.databaseModel.aggregate(query));
+      let models = <E[]>(await this.databaseModel.aggregate(query));
 
       return models[0];
     }
@@ -229,14 +234,14 @@ export class Repository<E> {
   /**
    * Hard delete a model by query
    * 
-   * @param {*} query 
+   * @param {any} [match={}] 
    * @param {((model: Document & E) => Promise<boolean>)} [validate] 
    * @returns {Promise<void>} 
    * @memberof Repository
    */
-  async deleteHardByQuery(query: any, validate?: (model: Document & E) => Promise<boolean>): Promise<void> {
+  async deleteHardByQuery(match = {}, validate?: (model: E) => Promise<boolean>): Promise<void> {
     try {
-      let model = await this.findOne(query);
+      let model = await this.findOne(match);
 
       if(!model) {
         throw new NotFoundError('Record not found');
@@ -249,18 +254,26 @@ export class Repository<E> {
         }
       }
 
-      await model.remove();
+      await this.databaseModel.findOneAndRemove({
+        '_id': model._id
+      });
     }
     catch(error) {
       throw error;
     }
   }
   
-
-  async query(aggregationQuery?: IAggregationQuery): Promise<(Document & E)[]> {
+  /**
+   * Query models
+   * 
+   * @param {IAggregationQuery} [aggregationQuery] 
+   * @returns {Promise<E[]>} 
+   * @memberof Repository
+   */
+  async query(aggregationQuery?: IAggregationQuery): Promise<E[]> {
     try {      
       let query = transformAggregationQuery(merge({}, this.aggreagationQuery, aggregationQuery));
-      let models = <(Document & E)[]>(await this.databaseModel.aggregate(query));
+      let models = <E[]>(await this.databaseModel.aggregate(query));
       return models;
     }
     catch(error) {
@@ -271,24 +284,25 @@ export class Repository<E> {
   /**
    * Get document count
    * 
-   * @param {any} [query={}] 
+   * @param {any} [match={}] 
    * @returns {Promise<number>} 
    * @memberof Repository
    */
-  async count(query = {}): Promise<number> {
-    try {
-      query = query || {};
+  async count(match = {}): Promise<number> {
+    try {      
+      let query = transformAggregationQuery(merge({}, this.aggreagationQuery, <IAggregationQuery>{ match: match }), false);
+      query.push({
+        '$count': 'total_records'
+      });
 
-      let q = this.databaseModel.count(query);      
+      let total: any[] = <(Document & E)[]>(await this.databaseModel.aggregate(query));
 
-      let count = await q;
-
-      return count;
+      return total[0] ? total[0].total_records : 0;
     }
     catch(error) {
       throw error;
     }
-  } 
+  }
 
   /**
    * Get disctinct documents

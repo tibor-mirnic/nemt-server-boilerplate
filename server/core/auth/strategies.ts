@@ -2,8 +2,6 @@ import * as passport from 'passport';
 import { Strategy as Local } from 'passport-local';
 import { Strategy as Bearer } from 'passport-http-bearer';
 
-import { Document } from 'mongoose';
-
 import { Server } from './../server';
 import { IRequest } from './../models/express/request';
 import { IPassportInfo } from './../models/passport';
@@ -42,7 +40,12 @@ export class PassportStrategies {
     ));    
   }
 
-  async local(request: IRequest, email: string, password: string, done: (err: any, user?: Document & IUser, info?: IPassportInfo) => void) {
+  async local(
+    request: IRequest, 
+    email: string, 
+    password: string, 
+    done: (err: any, user?: IUser, info?: IPassportInfo) => void
+  ) {
     try {
       if (!email || !password) {
         throw new AuthenticationError('Missing email or password fields!');
@@ -75,7 +78,10 @@ export class PassportStrategies {
     }
   }
 
-  async bearer(token: string, done: (err: any, user?: Document & IUser, info?: IPassportInfo) => void) {
+  async bearer(
+    token: string, 
+    done: (err: any, user?: IUser, info?: IPassportInfo) => void
+  ) {
     try {
       let errorObj = new ForbiddenError('Unauthorized!');
 

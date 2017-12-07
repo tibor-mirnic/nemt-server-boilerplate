@@ -1,3 +1,5 @@
+import { SchemaTypes } from 'mongoose';
+
 export interface IIdentifier {
-  _id: any;
+  _id: typeof SchemaTypes.ObjectId;
 }

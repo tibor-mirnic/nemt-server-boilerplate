@@ -1,7 +1,6 @@
 import * as LRU from 'lru-cache';
 
 import { Server } from './../core/server';
-import { UserFriendlyError } from './../core/error/user-friendly';
 import { IUser } from './../db/models/user/user';
 import { UserRepository } from './../repositories/user';
 
