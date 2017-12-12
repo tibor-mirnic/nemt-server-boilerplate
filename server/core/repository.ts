@@ -1,5 +1,5 @@
 import { Model, Document } from 'mongoose';
-import { merge } from 'lodash';
+import { merge, mergeWith, cloneDeep } from 'lodash';
 
 import { Factory } from './../core/db/factory';
 import { IRepositoryConfiguration, IAggregationQuery, transformAggregationQuery } from './extensions/repository';
@@ -67,6 +67,24 @@ export class Repository<E extends IIdentifier> {
   }
 
   /**
+   * lodash mergeWith customizer
+   * If propery is an array do not merge, just overwrite destination with source
+   * 
+   * @param {*} value 
+   * @param {*} srcValue 
+   * @param {string} key 
+   * @param {*} object 
+   * @param {*} source 
+   * @returns {*} 
+   * @memberof Repository
+   */
+  mergeWithCustomizer(value: any, srcValue: any, key: string, object: any, source: any): any {
+    if(Array.isArray(object[key])) {
+      return cloneDeep(source[key]);
+    }    
+  }
+
+  /**
    * Returns model or throws NotFound exception
    * 
    * @param {string} id 
@@ -115,7 +133,7 @@ export class Repository<E extends IIdentifier> {
    */
   async findOne(match = {}): Promise<E | null> {
     try {      
-      let query = transformAggregationQuery(merge({}, this.aggreagationQuery, <IAggregationQuery>{ match: match }), false);
+      let query = transformAggregationQuery(mergeWith({}, this.aggreagationQuery, <IAggregationQuery>{ match: match }, this.mergeWithCustomizer), false);
       let models = <E[]>(await this.databaseModel.aggregate(query));
 
       return models[0];
@@ -272,7 +290,7 @@ export class Repository<E extends IIdentifier> {
    */
   async query(aggregationQuery?: IAggregationQuery): Promise<E[]> {
     try {      
-      let query = transformAggregationQuery(merge({}, this.aggreagationQuery, aggregationQuery));
+      let query = transformAggregationQuery(mergeWith({}, this.aggreagationQuery, aggregationQuery, this.mergeWithCustomizer));
       let models = <E[]>(await this.databaseModel.aggregate(query));
       return models;
     }
@@ -290,7 +308,7 @@ export class Repository<E extends IIdentifier> {
    */
   async count(match = {}): Promise<number> {
     try {      
-      let query = transformAggregationQuery(merge({}, this.aggreagationQuery, <IAggregationQuery>{ match: match }), false);
+      let query = transformAggregationQuery(mergeWith({}, this.aggreagationQuery, <IAggregationQuery>{ match: match }, this.mergeWithCustomizer), false);
       query.push({
         '$count': 'total_records'
       });
