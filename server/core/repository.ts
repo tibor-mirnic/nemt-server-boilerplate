@@ -81,7 +81,16 @@ export class Repository<E extends IIdentifier> {
   mergeWithCustomizer(value: any, srcValue: any, key: string, object: any, source: any): any {
     if(Array.isArray(object[key])) {
       return cloneDeep(source[key]);
-    }    
+    }
+    
+    if(key === 'sort') {
+      if(JSON.stringify(srcValue) === JSON.stringify({})) {
+        return object[key];
+      }
+      else {        
+        return srcValue;
+      }
+    }
   }
 
   /**
@@ -118,6 +127,29 @@ export class Repository<E extends IIdentifier> {
       let model = await this.databaseModel.findById(id);
 
       return model;
+    }
+    catch(error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Returns model using aggregate or throws NotFound exception
+   * 
+   * @param {any} [match={}] 
+   * @returns {(Promise<E>)} 
+   * @memberof Repository
+   */
+  async getOne(match = {}): Promise<E> {
+    try {      
+      let query = transformAggregationQuery(mergeWith({}, this.aggreagationQuery, <IAggregationQuery>{ match: match }, this.mergeWithCustomizer), false);
+      let models = <E[]>(await this.databaseModel.aggregate(query));
+
+      if(models.length == 0) {
+        throw new NotFoundError('Record not found!');
+      }
+
+      return models[0];
     }
     catch(error) {
       throw error;

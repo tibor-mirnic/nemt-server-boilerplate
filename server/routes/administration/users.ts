@@ -26,7 +26,7 @@ export class UserRouter extends Router {
       
       let users = await ur.query();
       
-      response.data = ur.transformObjects(users);
+      response.data = users;
       return next();
     }
     catch(error) {
@@ -48,7 +48,7 @@ export class UserRouter extends Router {
       });
 
       if(user) {        
-        response.data = ur.transformObject(user);
+        response.data = user;
       }
       else {
         response.data = {};

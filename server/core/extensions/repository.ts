@@ -8,6 +8,7 @@ export interface IRepositoryConfiguration<E> {
 }
 
 export interface IAggregationQuery {
+	arrayUnwind?: string[]; // use when you have array of references in your schema
 	lookup?: [{
 		from: string;
 		localField: string;
@@ -23,13 +24,28 @@ export interface IAggregationQuery {
 	skip?: number;
 	limit?: number;
 	unwind?: string[];
+	group?: {
+		'_id': string;
+		[other: string]: any
+	};
 	project?: {
-		[other: string]: 0 | 1
+		[other: string]: 0 | 1 | string | any
 	};
 }
 
-export const transformAggregationQuery = (aggregated: IAggregationQuery, sortAndLimit = true): any[] => {
+export const transformAggregationQuery = (aggregated: IAggregationQuery, skipAndLimit = true): any[] => {
 	let query: any[] = [];
+
+	if(aggregated.arrayUnwind) {
+		aggregated.arrayUnwind.forEach(path => {
+			query.push({
+				'$unwind': {
+					'path': path,
+					'preserveNullAndEmptyArrays': true
+				}
+			});
+		});
+	}
 
  	if(aggregated.lookup) {
 		aggregated.lookup.forEach(lookup => {
@@ -44,26 +60,6 @@ export const transformAggregationQuery = (aggregated: IAggregationQuery, sortAnd
 			'$match': aggregated.match
 		});
 	}
-
-	if(sortAndLimit) {
-		if(aggregated.sort) {
-			query.push({
-				'$sort': aggregated.sort
-			});
-		}
-	
-		if(aggregated.skip) {
-			query.push({
-				'$skip': aggregated.skip
-			});
-		}
-	
-		if(aggregated.limit) {
-			query.push({
-				'$limit': aggregated.limit
-			});
-		}
-	}
 	
 	if(aggregated.unwind) {
 		aggregated.unwind.forEach(path => {
@@ -76,7 +72,39 @@ export const transformAggregationQuery = (aggregated: IAggregationQuery, sortAnd
 		});
 	}
 
-	if(aggregated.project) {
+	if(aggregated.group) {		
+		// if agggregation exist you can only use either inclusion on exclusion of the fields
+		// by default we exclude __v property
+		if(aggregated.project) {
+			delete aggregated.project['__v'];
+		}
+
+		query.push({
+			'$group': aggregated.group
+		});
+	}
+
+	if(aggregated.sort) {
+		query.push({
+			'$sort': aggregated.sort
+		});
+	}
+
+	if(skipAndLimit) {
+		if(aggregated.skip) {
+			query.push({
+				'$skip': aggregated.skip
+			});
+		}
+	
+		if(aggregated.limit) {
+			query.push({
+				'$limit': aggregated.limit
+			});
+		}
+	}
+
+	if(aggregated.project) {		
 		query.push({
 			'$project': aggregated.project
 		});
