@@ -2,7 +2,7 @@
   "rules": {
       "array-type": [
           true,
-          "array-simple"
+          "array"
       ],
       "arrow-parens": true,
       "no-var-keyword": true,
@@ -12,20 +12,20 @@
               "ignore-pattern": "^_"
           }
       ],
-      "ordered-imports": [
-          true,
-          {
-              "import-sources-order": "lowercase-last",
-              "named-imports-order": "lowercase-first"
-          }
-      ],
-      "trailing-comma": [
-          true,
-          {
-              "multiline": "always",
-              "singleline": "never"
-          }
-      ],
+    //   "ordered-imports": [
+    //       true,
+    //       {
+    //           "import-sources-order": "lowercase-last",
+    //           "named-imports-order": "lowercase-first"
+    //       }
+    //   ],
+    //   "trailing-comma": [
+    //       true,
+    //       {
+    //           "multiline": "always",
+    //           "singleline": "never"
+    //       }
+    //   ],
       "class-name": true,
       "comment-format": [
           true,
@@ -33,11 +33,12 @@
       ],
       "indent": [
           true,
-          "spaces"
+          "spaces",
+          2
       ],
       "no-eval": true,
       "no-internal-module": true,
-      "no-trailing-whitespace": true,
+    //   "no-trailing-whitespace": true,
       "no-unsafe-finally": true,
       "one-line": [
           true,
@@ -46,7 +47,7 @@
       ],
       "quotemark": [
           true,
-          "double"
+          "single"
       ],
       "semicolon": [
           true,
@@ -69,15 +70,16 @@
       "variable-name": [
           true,
           "ban-keywords"
-      ],
-      "whitespace": [
-          true,
-          "check-branch",
-          "check-decl",
-          "check-operator",
-          "check-separator",
-          "check-type"
       ]
+    //   ,
+    //   "whitespace": [
+    //       true,
+    //       "check-branch",
+    //       "check-decl",
+    //       "check-operator",
+    //       "check-separator",
+    //       "check-type"
+    //   ]
   },
   "jsRules": {
       "triple-equals": [

@@ -145,7 +145,7 @@ export class Repository<E extends IIdentifier> {
       let query = transformAggregationQuery(mergeWith({}, this.aggreagationQuery, <IAggregationQuery>{ $match: match }, this.mergeWithCustomizer), false);
       let models = <E[]>(await this.databaseModel.aggregate(query));
 
-      if(models.length == 0) {
+      if(models.length === 0) {
         throw new NotFoundError('Record not found!');
       }
 
