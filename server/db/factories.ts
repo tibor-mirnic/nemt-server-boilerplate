@@ -16,6 +16,6 @@ export class FactoryBuilder {
       role: new RoleFactory(connection),
       user: new UserFactory(connection),
       token: new TokenFactory(connection)
-    }
+    };
   }
 }

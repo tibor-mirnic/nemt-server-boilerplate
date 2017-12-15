@@ -193,7 +193,7 @@ export class Server {
 
     // Cannot work like this due to `-auth` flag when starting mongo instance
     // create Mongo user
-    //server.createDatabaseUser();
+    // server.createDatabaseUser();
 
     // setup database users and permissions
     await server.createSystemUser();
@@ -250,7 +250,7 @@ export class Server {
           return {
             'type': permission.type,
             'description': permission.description
-          }
+          };
         });
       });
     }
@@ -260,7 +260,7 @@ export class Server {
           return {
             'type': permission.type,
             'description': permission.description
-          }
+          };
         });
       });
     }

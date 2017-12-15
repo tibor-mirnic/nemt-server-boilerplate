@@ -81,7 +81,7 @@ export class Logger {
       }
 
       if(response.onErrorRequestData.body) {
-        msg += `  Payload: ${JSON.stringify(response.onErrorRequestData.body)}\n`
+        msg += `  Payload: ${JSON.stringify(response.onErrorRequestData.body)}\n`;
       }
 
       msg += `  ${errorMsg}`;
