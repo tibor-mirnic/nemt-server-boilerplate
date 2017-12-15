@@ -14,7 +14,7 @@ export class FactoryTest {
 	async loadUsersWithRole() {
 		try {			
 			let users = await this.userRepo.query({
-				sort: {
+				$sort: {
 					'role.type': 1
 				},
 				
@@ -32,11 +32,11 @@ export class FactoryTest {
 	async overrideDefaultQuery() {
 		try {			
 			let users = await this.userRepo.query({
-				match: {
+				$match: {
 					'isDeleted': { '$in': [ true, false ] },
 					'isSystem': { '$in': [ true, false ] }
 				},
-				sort: {
+				$sort: {
 					'role.type': -1
 				}
 			});

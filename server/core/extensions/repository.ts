@@ -8,27 +8,27 @@ export interface IRepositoryConfiguration<E> {
 }
 
 export interface IAggregationQuery {
-	arrayUnwind?: string[]; // use when you have array of references in your schema
-	lookup?: [{
+	'$arrayUnwind'?: string[]; // use when you have array of references in your schema
+	'$lookup'?: [{
 		from: string;
 		localField: string;
 		foreignField: string;
 		as: string;
 	}];
-	match?: {
+	'$match'?: {
 		[other: string]: any
 	};
-	sort?: {
+	'$sort'?: {
 		[other: string]: -1 | 1
 	};
-	skip?: number;
-	limit?: number;
-	unwind?: string[];
-	group?: {
+	'$skip'?: number;
+	'$limit'?: number;
+	'$unwind'?: string[];
+	'$group'?: {
 		'_id': string;
 		[other: string]: any
 	};
-	project?: {
+	'$project'?: {
 		[other: string]: 0 | 1 | string | any
 	};
 }
@@ -36,8 +36,8 @@ export interface IAggregationQuery {
 export const transformAggregationQuery = (aggregated: IAggregationQuery, skipAndLimit = true): any[] => {
 	let query: any[] = [];
 
-	if(aggregated.arrayUnwind) {
-		aggregated.arrayUnwind.forEach(path => {
+	if(aggregated.$arrayUnwind) {
+		aggregated.$arrayUnwind.forEach(path => {
 			query.push({
 				'$unwind': {
 					'path': path,
@@ -47,22 +47,22 @@ export const transformAggregationQuery = (aggregated: IAggregationQuery, skipAnd
 		});
 	}
 
- 	if(aggregated.lookup) {
-		aggregated.lookup.forEach(lookup => {
+ 	if(aggregated.$lookup) {
+		aggregated.$lookup.forEach(lookup => {
 			query.push({
 				'$lookup': lookup
 			});
 		});
 	}
 
-	if(aggregated.match) {
+	if(aggregated.$match) {
 		query.push({
-			'$match': aggregated.match
+			'$match': aggregated.$match
 		});
 	}
 	
-	if(aggregated.unwind) {
-		aggregated.unwind.forEach(path => {
+	if(aggregated.$unwind) {
+		aggregated.$unwind.forEach(path => {
 			query.push({
 				'$unwind': {
 					'path': path,
@@ -72,41 +72,41 @@ export const transformAggregationQuery = (aggregated: IAggregationQuery, skipAnd
 		});
 	}
 
-	if(aggregated.group) {		
+	if(aggregated.$group) {		
 		// if agggregation exist you can only use either inclusion on exclusion of the fields
 		// by default we exclude __v property
-		if(aggregated.project) {
-			delete aggregated.project['__v'];
+		if(aggregated.$project) {
+			delete aggregated.$project['__v'];
 		}
 
 		query.push({
-			'$group': aggregated.group
+			'$group': aggregated.$group
 		});
 	}
 
-	if(aggregated.sort) {
+	if(aggregated.$sort) {
 		query.push({
-			'$sort': aggregated.sort
+			'$sort': aggregated.$sort
 		});
 	}
 
 	if(skipAndLimit) {
-		if(aggregated.skip) {
+		if(aggregated.$skip) {
 			query.push({
-				'$skip': aggregated.skip
+				'$skip': aggregated.$skip
 			});
 		}
 	
-		if(aggregated.limit) {
+		if(aggregated.$limit) {
 			query.push({
-				'$limit': aggregated.limit
+				'$limit': aggregated.$limit
 			});
 		}
 	}
 
-	if(aggregated.project) {		
+	if(aggregated.$project) {
 		query.push({
-			'$project': aggregated.project
+			'$project': aggregated.$project
 		});
 	}
 

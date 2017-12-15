@@ -9,18 +9,18 @@ export class UserRepository extends Repository<IUser> {
       factory: server.factories.user,
       userId: userId,
       aggregationQuery: {
-        lookup: [{
+        $lookup: [{
           from: 'roles',
           localField: 'role',
           foreignField: '_id',
           as: 'role'          
         }],
-        match: {
+        $match: {
           'isDeleted': false,
           'isSystem': false
         },
-        unwind: ['$role'],
-        project: {
+        $unwind: ['$role'],
+        $project: {
           'passwordHash': 0          
         }
       }

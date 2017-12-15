@@ -29,7 +29,7 @@ export class Repository<E extends IIdentifier> {
     this.factory = config.factory;
     this.userId = config.userId;
     this.aggreagationQuery = merge(<IAggregationQuery>{
-      project: {
+      $project: {
         '__v': 0
       }
     }, config.aggregationQuery);
@@ -83,7 +83,7 @@ export class Repository<E extends IIdentifier> {
       return cloneDeep(source[key]);
     }
     
-    if(key === 'sort') {
+    if(key === '$sort') {
       if(JSON.stringify(srcValue) === JSON.stringify({})) {
         return object[key];
       }
@@ -142,7 +142,7 @@ export class Repository<E extends IIdentifier> {
    */
   async getOne(match = {}): Promise<E> {
     try {      
-      let query = transformAggregationQuery(mergeWith({}, this.aggreagationQuery, <IAggregationQuery>{ match: match }, this.mergeWithCustomizer), false);
+      let query = transformAggregationQuery(mergeWith({}, this.aggreagationQuery, <IAggregationQuery>{ $match: match }, this.mergeWithCustomizer), false);
       let models = <E[]>(await this.databaseModel.aggregate(query));
 
       if(models.length == 0) {
@@ -165,7 +165,7 @@ export class Repository<E extends IIdentifier> {
    */
   async findOne(match = {}): Promise<E | null> {
     try {      
-      let query = transformAggregationQuery(mergeWith({}, this.aggreagationQuery, <IAggregationQuery>{ match: match }, this.mergeWithCustomizer), false);
+      let query = transformAggregationQuery(mergeWith({}, this.aggreagationQuery, <IAggregationQuery>{ $match: match }, this.mergeWithCustomizer), false);
       let models = <E[]>(await this.databaseModel.aggregate(query));
 
       return models[0];
@@ -340,7 +340,7 @@ export class Repository<E extends IIdentifier> {
    */
   async count(match = {}): Promise<number> {
     try {      
-      let query = transformAggregationQuery(mergeWith({}, this.aggreagationQuery, <IAggregationQuery>{ match: match }, this.mergeWithCustomizer), false);
+      let query = transformAggregationQuery(mergeWith({}, this.aggreagationQuery, <IAggregationQuery>{ $match: match }, this.mergeWithCustomizer), false);
       query.push({
         '$count': 'total_records'
       });

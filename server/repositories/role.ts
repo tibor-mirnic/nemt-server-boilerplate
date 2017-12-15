@@ -9,7 +9,7 @@ export class RoleRepository extends Repository<IRole> {
       factory: server.factories.role,
       userId: userId,
       aggregationQuery: {
-        match: {
+        $match: {
           'isDeleted': false
         }
       }
