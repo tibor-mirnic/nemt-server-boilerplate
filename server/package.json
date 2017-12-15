@@ -55,6 +55,7 @@
     "@types/request": "^2.0.4",
     "@types/uuid": "^3.4.3",
     "@types/winston": "^2.3.6",
+    "tslint": "^5.8.0",
     "typescript": "^2.5.3"
   }
 }
