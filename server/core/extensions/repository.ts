@@ -1,10 +1,13 @@
 import { Factory } from './../db/factory';
+import { IAuditLogger } from '../models/audit-log';
 
 export interface IRepositoryConfiguration<E> {
 	factory: Factory<E>;
-	userId?: string;
+	userId: string;
 	aggregationQuery: IAggregationQuery;
 	processDocument?: (record: E) => void;
+	
+	auditLogger: IAuditLogger;
 }
 
 export interface IAggregationQuery {

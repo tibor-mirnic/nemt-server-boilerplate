@@ -6,5 +6,12 @@ export const constants: IConstants = {
     minLength: 8,
     mixedCaseRequired: true,
     numberRequired: true
-  }
+  },
+  auditLogOperations: [
+    'CREATE',
+    'UPDATE',
+    'DELETE',
+    'HARD_DELETE',
+    'EXTERNAL'
+  ]
 };

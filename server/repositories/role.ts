@@ -12,7 +12,8 @@ export class RoleRepository extends Repository<IRole> {
         $match: {
           'isDeleted': false
         }
-      }
+      },
+      auditLogger: server.auditLogger
     });
   }
 }

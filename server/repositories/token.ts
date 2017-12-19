@@ -6,8 +6,10 @@ export class TokenRepository extends Repository<IToken> {
 
   constructor(server: Server) {
     super({
-      factory: server.factories.token,      
-      aggregationQuery: { }
+      factory: server.factories.token,
+      userId: server.systemUserId,      
+      aggregationQuery: { },
+      auditLogger: server.auditLogger
     });
   }
 }

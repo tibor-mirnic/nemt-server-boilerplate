@@ -7,6 +7,7 @@ import { AuditInfo, Operation } from './extensions/audit-info';
 import { DatabaseError } from './error/server';
 import { NotFoundError } from './error/not-found';
 import { IIdentifier } from './models/db/identifier';
+import { IAuditLogger, AuditLogOperation } from './models/audit-log';
 
 /**
  * Helper class for Mongoose
@@ -17,9 +18,11 @@ import { IIdentifier } from './models/db/identifier';
  */
 export class Repository<E extends IIdentifier> {
   private factory: Factory<E>;
-  private userId?: string;
-  private aggreagationQuery: IAggregationQuery;
+  private userId: string;
+  private aggreagationQuery: IAggregationQuery;  
   private processDocument?: (record: E) => void;
+
+  public auditLogger: IAuditLogger;
 
   get databaseModel(): Model<Document & E> {
     return this.factory.model;
@@ -34,6 +37,8 @@ export class Repository<E extends IIdentifier> {
       }
     }, config.aggregationQuery);
     this.processDocument = config.processDocument;
+    
+    this.auditLogger = config.auditLogger;
   }
   
   /**
@@ -185,13 +190,12 @@ export class Repository<E extends IIdentifier> {
   async create(init: (model: Document & E) => void): Promise<Document & E> { 
     try {
       let model = new this.databaseModel();
-      init(model);
-
-      if(this.userId) {
-        model = AuditInfo.beforeSave(model, this.userId, Operation.CREATE);
-      }
       
-      await model.save();      
+      init(model);
+      model = AuditInfo.beforeSave(model, this.userId, Operation.CREATE);
+      
+      await model.save();
+      await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.CREATE, {}, this.transformObject(model));
       return model;
     }
     catch(error) {
@@ -209,15 +213,14 @@ export class Repository<E extends IIdentifier> {
    */
   async update(id: string, update: (model: Document & E) => void): Promise<Document & E> { 
     try {
-      let model = await this.getById(id);      
-      update(model);
-      
+      let model = await this.getById(id);
+      let dataBefore = this.transformObject(model);
 
-      if(this.userId) {
-        model = AuditInfo.beforeSave(model, this.userId, Operation.UPDATE);
-      }
+      update(model);      
+      model = AuditInfo.beforeSave(model, this.userId, Operation.UPDATE);
       
-      await model.save();      
+      await model.save();
+      await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.UPDATE, dataBefore, this.transformObject(model));
       return model;      
     }
     catch(error) {
@@ -235,7 +238,7 @@ export class Repository<E extends IIdentifier> {
    */
   async delete(id: string, validate?: (model: Document & E) => Promise<boolean>): Promise<void> {
     try {
-      let model = await this.getById(id);
+      let model = await this.getById(id);      
 
       if(validate) {
         let valid = await validate(model);
@@ -244,11 +247,11 @@ export class Repository<E extends IIdentifier> {
         }
       }
 
-      if(this.userId) {
-        model = AuditInfo.beforeSave(model, this.userId, Operation.DELETE);
-      }
+      let dataBefore = this.transformObject(model);
+      model = AuditInfo.beforeSave(model, this.userId, Operation.DELETE);
       
-      await model.save();            
+      await model.save();
+      await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.DELETE, dataBefore, this.transformObject(model));
     }
     catch(error) {
       throw error;
@@ -274,7 +277,9 @@ export class Repository<E extends IIdentifier> {
         }
       }
 
+      let dataBefore = this.transformObject(model);
       await model.remove();
+      await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.HARD_DELETE, dataBefore, {});
     }
     catch(error) {
       throw error;
@@ -291,11 +296,11 @@ export class Repository<E extends IIdentifier> {
    */
   async deleteHardByQuery(match = {}, validate?: (model: E) => Promise<boolean>): Promise<void> {
     try {
-      let model = await this.findOne(match);
+      let model = await this.findOne(match);      
 
       if(!model) {
         throw new NotFoundError('Record not found');
-      }
+      }      
 
       if(validate) {
         let valid = await validate(model);
@@ -307,6 +312,7 @@ export class Repository<E extends IIdentifier> {
       await this.databaseModel.findOneAndRemove({
         '_id': model._id
       });
+      await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.HARD_DELETE, model, {});
     }
     catch(error) {
       throw error;

@@ -5,6 +5,7 @@ export interface IPasswordRequirements {
 }
 
 export interface IConstants {
+  auditLogOperations: string[]
   googleTokenAuth: string;
   passwordRequirements: IPasswordRequirements;
 }

@@ -41,55 +41,36 @@ import { ReportCache } from './../core/cache/report';
 import { TokenCache } from './../core/cache/token';
 
 // repositories
+import { AuditLogRepository } from '../repositories/audit-log';
 import { RoleRepository } from './../repositories/role';
 import { IRole } from './../db/models/role/role';
 
 import { UserRepository } from './../repositories/user';
 
 export class Server {
-  serverLogPath: string;
-  environmentsPath: string;
-  httpLogPath: string;
-  exportPath: string;
+  public serverLogPath: string;
+  public environmentsPath: string;
+  public httpLogPath: string;
+  public exportPath: string;
 
-  app: express.Application;
+  public app: express.Application;
 
-  logger: Logger;
-  environment: IEnvironment;
-  constants: IConstants;
+  public logger: Logger;
+  public environment: IEnvironment;
+  public constants: IConstants;
 
-  dbContext: DbContext;
-  factories: IFactories;
+  public dbContext: DbContext;
+  public factories: IFactories;
 
-  passport: Passport;
+  public auditLogger: AuditLogRepository;
 
-  systemUserId: string;
+  public passport: Passport;
 
-  cache: ICache;
+  public systemUserId: string;
 
-  constructor() {
-    this.initFolderPaths();
-    
-    this.app = express();
-    this.logger = new Logger(this.serverLogPath);
-    this.environment = Environment.load();
+  public cache: ICache;
 
-    this.dbContext = new DbContext(this.environment, this.logger);
-    this.factories = FactoryBuilder.build(this.dbContext.getConnection());
-    
-    // build middleware
-    this.useHeaders();
-    this.useBodyParser();
-    this.useBusboy();  
-    this.useMorgan();
-    
-    this.checkConnection();
-    
-    this.usePassport();
-    this.useRoutes();
-
-    this.useHandlers();
-  }
+  constructor() { }
 
   initFolderPaths() {
     this.serverLogPath = join(__dirname, '../private', 'log', 'server');
@@ -187,49 +168,26 @@ export class Server {
     };
   }
 
-  // run the server
-  static async bootstrap() {
-    let server = new Server();
-
-    // Cannot work like this due to `-auth` flag when starting mongo instance
-    // create Mongo user
-    // server.createDatabaseUser();
-
-    // setup database users and permissions
-    await server.createSystemUser();
-    let superAdminRole = await server.upsertSuperAdminRole();    
-    await server.upsertSuperAdminUser(superAdminRole);
-
-    // had to be here because we need systemUser in the database
-    server.initCache();
-
-    // start server
-    server.startServer();
-
-    return server;
+  // create AuditLogger
+  initAuditLogger() {
+    this.auditLogger = new AuditLogRepository(this);
   }
   
-  // createDatabaseUser() {    
-  //   execSync(`mongo ${this.environment.MONGO_DB.URL}/${this.environment.MONGO_DB.DATABASE_NAME} --eval "db.dropUser('${this.environment.MONGO_DB.USER}')"`, { stdio:[0,1,2] });
-  //   execSync(`mongo ${this.environment.MONGO_DB.URL}/${this.environment.MONGO_DB.DATABASE_NAME} --eval "db.createUser({ user: '${this.environment.MONGO_DB.USER}', pwd: '${this.environment.MONGO_DB.PASSWORD}', roles: [{ role: 'readWrite', db: '${this.environment.MONGO_DB.DATABASE_NAME}'}]})"`, { stdio:[0,1,2] });
-  // }
-
   async createSystemUser(): Promise<void> {
-    let ur = new UserRepository(this, this.systemUserId);
-
-    let system = (await ur.databaseModel.findOne({
+    let system = await this.factories.user.model.findOne({
       'isSystem': true
-    }));
+    });
 
     if(!system) {
-      system = await ur.create(user => {
-        user.email = 'system';
-        user.firstName = 'SYSTEM';
-        user.lastName = 'SYSTEM';
-        user.isSystem = true;
-        user.isDeleted = true;
-        user.role = null;
-      });
+      system = new this.factories.user.model();      
+      system.email = 'system';
+      system.firstName = 'SYSTEM';
+      system.lastName = 'SYSTEM';
+      system.isSystem = true;
+      system.isDeleted = true;
+      system.role = undefined;
+
+      await system.save();
     }
 
     this.systemUserId = system._id.toString();
@@ -293,5 +251,47 @@ export class Server {
         user.passwordHash = Util.generateHash(this.environment.superAdmin.password);
       });
     }   
-  }  
+  }
+
+  // run the server
+  static async bootstrap() {
+    let server = new Server();
+
+    server.initFolderPaths();
+    
+    server.app = express();
+    server.logger = new Logger(server.serverLogPath);
+    server.environment = Environment.load();
+
+    server.dbContext = new DbContext(server.environment, server.logger);
+    server.factories = FactoryBuilder.build(server.dbContext.getConnection());
+
+    await server.createSystemUser();
+    server.initAuditLogger();
+    
+    // build middleware
+    server.useHeaders();
+    server.useBodyParser();
+    server.useBusboy();  
+    server.useMorgan();
+    
+    server.checkConnection();
+    
+    server.usePassport();
+    server.useRoutes();
+
+    server.useHandlers();
+
+    // setup database users and permissions    
+    let superAdminRole = await server.upsertSuperAdminRole();    
+    await server.upsertSuperAdminUser(superAdminRole);
+
+    // had to be here because we need systemUser in the database
+    server.initCache();
+
+    // start server
+    server.startServer();
+
+    return server;
+  }
 }

@@ -23,7 +23,8 @@ export class UserRepository extends Repository<IUser> {
         $project: {
           'passwordHash': 0          
         }
-      }
+      },
+      auditLogger: server.auditLogger
     });
   }
 }

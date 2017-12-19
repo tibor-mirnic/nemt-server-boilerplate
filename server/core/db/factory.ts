@@ -18,10 +18,11 @@ export interface IFactoryConfiguration {
 export class Factory<E> {
   private _model: Model<Document & E>;
   private connection: Connection;
-  private name: string;
   private definition: SchemaDefinition;
   private indexes?: ISchemaIndex[];  
-
+  
+  public name: string;
+  
   public get model(): Model<Document & E> {
     return this._model;
   }
