@@ -70,7 +70,22 @@ export class Server {
 
   public cache: ICache;
 
-  constructor() { }
+  constructor() {    
+    this.initFolderPaths();
+    
+    this.logger = new Logger(this.serverLogPath);
+    this.environment = Environment.load();      
+  }
+
+  async initDatabase() {
+    try{
+      this.dbContext = await DbContext.connect(this.environment, this.logger);       
+      this.factories = FactoryBuilder.build(this.dbContext.getConnection());
+    }
+    catch(error) {
+      throw error;
+    }
+  }
 
   initFolderPaths() {
     this.serverLogPath = join(__dirname, '../private', 'log', 'server');
@@ -255,43 +270,43 @@ export class Server {
 
   // run the server
   static async bootstrap() {
-    let server = new Server();
+    try {
+      let server = new Server();
+      
+      await server.initDatabase();
 
-    server.initFolderPaths();
-    
-    server.app = express();
-    server.logger = new Logger(server.serverLogPath);
-    server.environment = Environment.load();
+      server.app = express();
 
-    server.dbContext = new DbContext(server.environment, server.logger);
-    server.factories = FactoryBuilder.build(server.dbContext.getConnection());
+      await server.createSystemUser();
+      server.initAuditLogger();
+      
+      // build middleware
+      server.useHeaders();
+      server.useBodyParser();
+      server.useBusboy();  
+      server.useMorgan();
+      
+      server.checkConnection();
+      
+      server.usePassport();
+      server.useRoutes();
 
-    await server.createSystemUser();
-    server.initAuditLogger();
-    
-    // build middleware
-    server.useHeaders();
-    server.useBodyParser();
-    server.useBusboy();  
-    server.useMorgan();
-    
-    server.checkConnection();
-    
-    server.usePassport();
-    server.useRoutes();
+      server.useHandlers();
 
-    server.useHandlers();
+      // setup database users and permissions    
+      let superAdminRole = await server.upsertSuperAdminRole();    
+      await server.upsertSuperAdminUser(superAdminRole);
 
-    // setup database users and permissions    
-    let superAdminRole = await server.upsertSuperAdminRole();    
-    await server.upsertSuperAdminUser(superAdminRole);
+      // had to be here because we need systemUser in the database
+      server.initCache();
 
-    // had to be here because we need systemUser in the database
-    server.initCache();
+      // start server
+      server.startServer();
 
-    // start server
-    server.startServer();
-
-    return server;
+      return server;
+    }
+    catch(error) {
+      throw error;
+    }
   }
 }
