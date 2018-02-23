@@ -12,12 +12,12 @@ export interface IRepositoryConfiguration<E> {
 
 export interface IAggregationQuery {
 	'$arrayUnwind'?: string[]; // use when you have array of references in your schema
-	'$lookup'?: [{
+	'$lookup'?: {
 		from: string;
 		localField: string;
 		foreignField: string;
 		as: string;
-	}];
+	}[];
 	'$match'?: {
 		[other: string]: any
 	};
