@@ -44,9 +44,8 @@ export class DbContext extends EventEmitter {
     dbConnection = mongoose.createConnection(this.mongoUri, {
       'user': this.environment.mongoDb.user,
       'pass': this.environment.mongoDb.password,
-      'server': {
-        'poolSize': this.poolSize
-      }
+      'useMongoClient': true,      
+      'poolSize': this.poolSize
     });
 
     dbConnection.on('connected', function() {      
