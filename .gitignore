@@ -7,3 +7,5 @@
 #Private
 *.log
 *.csv
+
+.idea/
