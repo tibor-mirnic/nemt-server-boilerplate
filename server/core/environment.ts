@@ -1,9 +1,8 @@
 import { IEnvironment } from './models/environment';
 import { local } from '../config/environments/local';
-import { test } from '../config/environments/test';
 import { development } from '../config/environments/development';
 
-export type EnvironmentType = 'local' | 'test' | 'development';
+export type EnvironmentType = 'local' | 'development';
 
 export class Environment {
   static load(): IEnvironment {
@@ -12,9 +11,6 @@ export class Environment {
     switch (env) {
       case 'local': {
         return local;
-      }
-      case 'test': {
-        return test;
       }
       case 'development': {
         return development;

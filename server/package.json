@@ -6,7 +6,6 @@
   "scripts": {
     "start": "NODE_ENV=local ts-node run.ts",
     "start-windows": "SET NODE_ENV=local&& ts-node run.ts",
-    "test": "ts-node tests/run.ts",
     "lint": "tslint **/*.ts -t verbose"
   },
   "author": "mirnictibor@gmail.com",

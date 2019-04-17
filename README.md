@@ -6,8 +6,6 @@ Application has multiple environments:
 
 * `local` - Default
 
-* `test`
-
 * `development`
 
 # Visual Studio Code #
@@ -21,12 +19,6 @@ To run application using `debugger` you need this configuration:
     "request": "launch",
     "name": "Debug server",
     "program": "${workspaceRoot}/server/run",
-    "cwd": "${workspaceRoot}/server"
-  }, {
-    "type": "node",
-    "request": "launch",
-    "name": "Unit tests",
-    "program": "${workspaceRoot}/server/tests/unit/run",
     "cwd": "${workspaceRoot}/server"
   }
 ]
@@ -104,7 +96,5 @@ db.createUser({
   ├── <b>repositories</b> - Mongoose model wrappers
   ├── <b>routes</b> - Express routes
     └── <b>module.ts</b> - Group express routes under same url
-  └── <b>test</b>
-    ├── <b>unit</b> - Unit tests
     ...
 </pre>
