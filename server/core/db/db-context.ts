@@ -1,19 +1,19 @@
 import * as mongoose from 'mongoose';
 import { NextFunction } from 'express';
-
-import { IEnvironment } from './../models/environment';
-import { DatabaseError } from './../error/server';
-import { IRequest } from './../models/express/request';
-import { IResponse } from './../models/express/response';
-import { Logger } from './../logger';
 import { EventEmitter } from 'events';
+
+import { IEnvironment } from '../models/environment';
+import { DatabaseError } from '../error/server';
+import { IRequest } from '../models/express/request';
+import { IResponse } from '../models/express/response';
+import { Logger } from '../logger';
 
 let dbConnection: mongoose.Connection;
 let connectionEstablished = false;
 
 export class DbContext extends EventEmitter {
   public mongoUri: string;
-  
+
   public environment: IEnvironment;
   public logger: Logger;
 
@@ -28,7 +28,7 @@ export class DbContext extends EventEmitter {
     this.logger = logger;
     this.poolSize = poolSize;
 
-    if(!dbConnection) {
+    if (!dbConnection) {
       this.initConnection();
     }
   }
@@ -36,43 +36,43 @@ export class DbContext extends EventEmitter {
   initConnection() {
     let me = this;
 
-    this.mongoUri = `mongodb://${this.environment.mongoDb.url}/${this.environment.mongoDb.databaseName}`;
+    this.mongoUri = `mongodb://${ this.environment.mongoDb.url }/${ this.environment.mongoDb.databaseName }`;
 
-    this.logger.info(`APPLICATION: Environment: ${this.environment.name}!`);
-    this.logger.info(`MONGO: Connection attempted with ${this.environment.mongoDb.user}:${this.environment.mongoDb.password}`);
-    
+    this.logger.info(`APPLICATION: Environment: ${ this.environment.name }!`);
+    this.logger.info(`MONGO: Connection attempted with ${ this.environment.mongoDb.user }:${ this.environment.mongoDb.password }`);
+
     dbConnection = mongoose.createConnection(this.mongoUri, {
       'user': this.environment.mongoDb.user,
       'pass': this.environment.mongoDb.password,
-      'useMongoClient': true,      
+      'useMongoClient': true,
       'poolSize': this.poolSize
     });
 
-    dbConnection.on('connected', function() {      
+    dbConnection.on('connected', function () {
       me.logger.info('MONGO: Mongoose connected!');
       connectionEstablished = true;
       me.emit('connection-established');
     });
 
-    dbConnection.on('disconnected', function(error) {
+    dbConnection.on('disconnected', function (error) {
       me.logger.info('MONGO: Mongoose disconnected!');
       connectionEstablished = false;
-      me.emit('connection-disconnected', error); 
+      me.emit('connection-disconnected', error);
     });
 
-    dbConnection.on('error', function(error) {
+    dbConnection.on('error', function (error) {
       me.logger.info('MONGO: Mongoose disconnected!');
       connectionEstablished = false;
-      me.emit('connection-failed', error); 
+      me.emit('connection-failed', error);
     });
 
-    process.on('SIGINT', function() {
-      console.log("SIGINT triggered");
+    process.on('SIGINT', function () {
+      console.log('SIGINT triggered');
       dbConnection.close();
-      setTimeout(function() {
+      setTimeout(function () {
         process.exit();
-      }, 1000); 
-    });        
+      }, 1000);
+    });
   }
 
   static async connect(environment: IEnvironment, logger: Logger, poolSize = 30): Promise<DbContext> {
@@ -81,40 +81,37 @@ export class DbContext extends EventEmitter {
         let context = new DbContext(environment, logger, poolSize);
         context.on('connection-established', () => {
           resolve(context);
-        });        
+        });
 
         context.on('connection-failed', (error) => {
           reject(error);
         });
       });
 
-      if(!dbContext) {
+      if (!dbContext) {
         throw new DatabaseError('Could not connect to the database!');
       }
 
       return dbContext;
-    }
-    catch(error) {
+    } catch (error) {
       throw error;
     }
   }
 
   async disconnect(): Promise<void> {
     try {
-      await new Promise<boolean>((resolve, reject) => {        
-        if(connectionEstablished && dbConnection) {
+      await new Promise<boolean>((resolve, reject) => {
+        if (connectionEstablished && dbConnection) {
           dbConnection.close();
 
           this.on('connection-disconnected', () => {
             resolve(true);
           });
-        }
-        else {
+        } else {
           throw new DatabaseError('Connection was not estabilshed!');
         }
       });
-    }
-    catch(error) {
+    } catch (error) {
       throw error;
     }
   }
@@ -128,7 +125,7 @@ export class DbContext extends EventEmitter {
   }
 
   checkConnection(request: IRequest, response: IResponse, next: NextFunction) {
-    if(!connectionEstablished) {
+    if (!connectionEstablished) {
       this.logger.info('MONGO - Database connection could not be established!');
       return next(new DatabaseError('Could not connect to the database!'));
     }

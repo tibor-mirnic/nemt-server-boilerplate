@@ -1,6 +1,6 @@
 import { SchemaDefinition } from 'mongoose';
 
-import { constants  } from './../../../config/constants';
+import { constants } from '../../../config/constants';
 
 export const AuditLogSchema: SchemaDefinition = {
   collectionName: {
@@ -32,4 +32,4 @@ export const AuditLogSchema: SchemaDefinition = {
     type: Date,
     default: null
   }
-}
+};

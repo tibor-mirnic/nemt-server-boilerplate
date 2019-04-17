@@ -1,11 +1,11 @@
-import { SchemaTypes, SchemaDefinition } from 'mongoose';
+import { SchemaDefinition, SchemaTypes } from 'mongoose';
 
 export const UserSchema: SchemaDefinition = {
   role: {
     ref: 'Role',
     type: SchemaTypes.ObjectId,
     default: null
-  },  
+  },
   email: {
     type: String,
     required: true

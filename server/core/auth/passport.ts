@@ -1,14 +1,12 @@
 import * as passport from 'passport';
 import { NextFunction } from 'express';
 
-import { Server } from './../server';
-import { IRequest } from './../models/express/request';
-import { IResponse } from './../models/express/response';
-import { IPassportInfo } from './../models/passport';
-import { ForbiddenError } from './../error/forbidden';
-
-import { IUser } from './../../db/models/user/user';
-
+import { Server } from '../server';
+import { IRequest } from '../models/express/request';
+import { IResponse } from '../models/express/response';
+import { IPassportInfo } from '../models/passport';
+import { ForbiddenError } from '../error/forbidden';
+import { IUser } from '../../db/models/user/user';
 import { PassportStrategies } from './strategies';
 
 export class Passport {
@@ -27,7 +25,7 @@ export class Passport {
         if (error) {
           return next(error);
         }
-        
+
         request.user = user;
         return next();
       }
@@ -41,13 +39,13 @@ export class Passport {
           return next(error);
         }
 
-        if(!user) {
+        if (!user) {
           return next(new ForbiddenError('Unauthorized!'));
         }
 
         request.user = user;
 
-        if(info && info.token) {
+        if (info && info.token) {
           request.token = info.token;
         }
 

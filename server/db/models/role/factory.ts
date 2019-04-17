@@ -1,6 +1,6 @@
 import { Connection } from 'mongoose';
-import { Factory } from './../../../core/db/factory';
 
+import { Factory } from '../../../core/db/factory';
 import { RoleSchema } from './schema';
 import { IRole } from './role';
 
@@ -26,6 +26,6 @@ export class RoleFactory extends Factory<IRole> {
           'updatedAt': 1
         }
       }]
-    });    
+    });
   }
 }

@@ -1,5 +1,5 @@
-import { Server } from './../core/server';
-import { RoutingModule } from './../core/express/routing-module';
+import { Server } from '../core/server';
+import { RoutingModule } from '../core/express/routing-module';
 
 import { UserRouter } from './administration/users';
 
@@ -13,6 +13,6 @@ export class RoutesModule extends RoutingModule {
   }
 
   build() {
-    this.server.app.use(`${this.baseUrl}/users`, this.userRouter.build());
+    this.server.app.use(`${ this.baseUrl }/users`, this.userRouter.build());
   }
 }

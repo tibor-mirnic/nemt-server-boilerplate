@@ -21,35 +21,30 @@ import { ICache } from './models/cache';
 import { DbContext } from './db/db-context';
 import { Passport } from './auth/passport';
 
-import { FactoryBuilder, IFactories } from './../db/factories';
+import { FactoryBuilder, IFactories } from '../db/factories';
 
 import { Util } from './util/util';
 
-import { IRequest } from './../core/models/express/request';
-import { IResponse } from './../core/models/express/response';
+import { IRequest } from './models/express/request';
+import { IResponse } from './models/express/response';
 import { SuccessHandler } from './handlers/success';
 import { ErrorHandler } from './handlers/error';
 
-import { RoutesModule } from './../routes/module';
-
+import { RoutesModule } from '../routes/module';
 // db
-import { permissions } from './../db/static/permissions';
-
+import { permissions } from '../db/static/permissions';
 // cache
-import { UserCache } from './../cache/user';
-import { ReportCache } from './../core/cache/report';
-import { TokenCache } from './../core/cache/token';
-
+import { UserCache } from '../cache/user';
+import { ReportCache } from './cache/report';
+import { TokenCache } from './cache/token';
 // repositories
 import { AuditLogRepository } from '../repositories/audit-log';
-import { RoleRepository } from './../repositories/role';
-import { IRole } from './../db/models/role/role';
-
-import { UserRepository } from './../repositories/user';
+import { RoleRepository } from '../repositories/role';
+import { IRole } from '../db/models/role/role';
+import { UserRepository } from '../repositories/user';
 
 export class Server {
   public serverLogPath: string;
-  public environmentsPath: string;
   public httpLogPath: string;
   public exportPath: string;
 
@@ -70,19 +65,59 @@ export class Server {
 
   public cache: ICache;
 
-  constructor() {    
+  constructor() {
     this.initFolderPaths();
-    
+
     this.logger = new Logger(this.serverLogPath);
-    this.environment = Environment.load();      
+    this.environment = Environment.load();
+  }
+
+  // run the server
+  static async bootstrap() {
+    try {
+      let server = new Server();
+
+      await server.initDatabase();
+
+      server.app = express();
+
+      await server.createSystemUser();
+      server.initAuditLogger();
+
+      // build middleware
+      server.useHeaders();
+      server.useBodyParser();
+      server.useBusboy();
+      server.useMorgan();
+
+      server.checkConnection();
+
+      server.usePassport();
+      server.useRoutes();
+
+      server.useHandlers();
+
+      // setup database users and permissions
+      let superAdminRole = await server.upsertSuperAdminRole();
+      await server.upsertSuperAdminUser(superAdminRole);
+
+      // had to be here because we need systemUser in the database
+      server.initCache();
+
+      // start server
+      server.startServer();
+
+      return server;
+    } catch (error) {
+      throw error;
+    }
   }
 
   async initDatabase() {
-    try{
-      this.dbContext = await DbContext.connect(this.environment, this.logger);       
+    try {
+      this.dbContext = await DbContext.connect(this.environment, this.logger);
       this.factories = FactoryBuilder.build(this.dbContext.getConnection());
-    }
-    catch(error) {
+    } catch (error) {
       throw error;
     }
   }
@@ -90,7 +125,7 @@ export class Server {
   initFolderPaths() {
     this.serverLogPath = join(__dirname, '../private', 'log', 'server');
     this.httpLogPath = join(__dirname, '../private', 'log', 'http');
-    this.exportPath = join(__dirname, '../private', 'tmp', 'export');    
+    this.exportPath = join(__dirname, '../private', 'tmp', 'export');
   }
 
   useHeaders() {
@@ -98,7 +133,7 @@ export class Server {
       origin: RegExp(this.environment.corsRegex),
       credentials: true
     };
-    
+
     this.app.use(cors(corsOptions));
     this.app.use(helmet.frameguard());
     this.app.options('*', cors(corsOptions));
@@ -111,22 +146,22 @@ export class Server {
       'extended': true
     }));
     this.app.use(bodyParser.json());
-    this.app.use(bodyParser.text({ 
-      'type': 'text/plain' 
+    this.app.use(bodyParser.text({
+      'type': 'text/plain'
     }));
   }
 
-  useBusboy() {  
+  useBusboy() {
     this.app.use(busboy({
       'limits': {
-        'fileSize': 1 * 1024 * 1024
+        'fileSize': 10 * 1024 * 1024
       }
     }));
   }
 
   useMorgan() {
     let accessLogStream = fileStreamRotator.getStream({
-      'date_format' : 'YYYY-MM-DD',
+      'date_format': 'YYYY-MM-DD',
       'filename': join(this.httpLogPath, '%DATE%.log'),
       'frequency': 'daily',
       'verbose': false
@@ -140,7 +175,7 @@ export class Server {
     this.app.use(this.dbContext.checkConnection.bind(this.dbContext));
   }
 
-  usePassport() {    
+  usePassport() {
     this.passport = new Passport(this);
   }
 
@@ -152,11 +187,11 @@ export class Server {
   useHandlers() {
     let successHandler = new SuccessHandler(this);
     let errorHandler = new ErrorHandler(this);
-    
+
     this.app.use((request: IRequest, response: IResponse, next: express.NextFunction) => {
       successHandler.process(request, response, next);
     });
-    
+
     this.app.use((error: any, request: IRequest, response: IResponse, next: express.NextFunction) => {
       errorHandler.process(error, request, response, next);
     });
@@ -168,15 +203,15 @@ export class Server {
       cert: readFileSync(this.environment.keys.cert),
       passphrase: this.environment.keys.passphrase
     };
-    
+
     createServer(options, <any>this.app).listen(this.environment.https.port, () => {
-      this.logger.info(`NODE: HTTPS listening on port ${this.environment.https.port}.`);
+      this.logger.info(`NODE: HTTPS listening on port ${ this.environment.https.port }.`);
     });
   }
 
   // add all database caches
   initCache() {
-    this.cache = {      
+    this.cache = {
       report: ReportCache,
       token: TokenCache,
       user: new UserCache(this)
@@ -187,14 +222,14 @@ export class Server {
   initAuditLogger() {
     this.auditLogger = new AuditLogRepository(this);
   }
-  
+
   async createSystemUser(): Promise<void> {
     let system = await this.factories.user.model.findOne({
       'isSystem': true
     });
 
-    if(!system) {
-      system = new this.factories.user.model();      
+    if (!system) {
+      system = new this.factories.user.model();
       system.email = 'system';
       system.firstName = 'SYSTEM';
       system.lastName = 'SYSTEM';
@@ -215,7 +250,7 @@ export class Server {
       'type': 'SUPER_ADMIN'
     });
 
-    if(!superAdminRole) {
+    if (!superAdminRole) {
       superAdminRole = await rr.create(role => {
         role.type = 'SUPER_ADMIN';
         role.description = 'Super administrator';
@@ -226,8 +261,7 @@ export class Server {
           };
         });
       });
-    }
-    else {
+    } else {
       superAdminRole = await rr.update(superAdminRole._id.toString(), role => {
         role.permissions = permissions.map(permission => {
           return {
@@ -239,7 +273,7 @@ export class Server {
     }
 
     return superAdminRole;
-  }  
+  }
 
   async upsertSuperAdminUser(superAdminRole: Document & IRole) {
     let ur = new UserRepository(this, this.systemUserId);
@@ -248,8 +282,8 @@ export class Server {
       'isAdmin': true
     });
 
-    if(!admin) {
-      admin = await ur.create(user => {
+    if (!admin) {
+      await ur.create(user => {
         user.email = this.environment.superAdmin.email;
         user.firstName = this.environment.superAdmin.firstName;
         user.lastName = this.environment.superAdmin.lastName;
@@ -257,56 +291,13 @@ export class Server {
         user.isAdmin = true;
         user.role = superAdminRole._id.toString();
       });
-    }
-    else {
-      admin = await ur.update(admin._id.toString(), user => {
+    } else {
+      await ur.update(admin._id.toString(), user => {
         user.email = this.environment.superAdmin.email;
         user.firstName = this.environment.superAdmin.firstName;
         user.lastName = this.environment.superAdmin.lastName;
         user.passwordHash = Util.generateHash(this.environment.superAdmin.password);
       });
-    }   
-  }
-
-  // run the server
-  static async bootstrap() {
-    try {
-      let server = new Server();
-      
-      await server.initDatabase();
-
-      server.app = express();
-
-      await server.createSystemUser();
-      server.initAuditLogger();
-      
-      // build middleware
-      server.useHeaders();
-      server.useBodyParser();
-      server.useBusboy();  
-      server.useMorgan();
-      
-      server.checkConnection();
-      
-      server.usePassport();
-      server.useRoutes();
-
-      server.useHandlers();
-
-      // setup database users and permissions    
-      let superAdminRole = await server.upsertSuperAdminRole();    
-      await server.upsertSuperAdminUser(superAdminRole);
-
-      // had to be here because we need systemUser in the database
-      server.initCache();
-
-      // start server
-      server.startServer();
-
-      return server;
-    }
-    catch(error) {
-      throw error;
     }
   }
 }

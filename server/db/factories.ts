@@ -15,7 +15,7 @@ export interface IFactories {
 export class FactoryBuilder {
   static build(connection: Connection): IFactories {
     return {
-      auditLog: new AuditLogFactory(connection),  
+      auditLog: new AuditLogFactory(connection),
       role: new RoleFactory(connection),
       user: new UserFactory(connection),
       token: new TokenFactory(connection)

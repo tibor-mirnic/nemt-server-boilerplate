@@ -1,4 +1,4 @@
-import { IReportColumn } from './../reports/column';
+import { IReportColumn } from './column';
 
 export interface IReport {
   id?: any;

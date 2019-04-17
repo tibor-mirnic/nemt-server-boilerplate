@@ -1,4 +1,4 @@
-import { IPermission } from './../models/role/permission';
+import { IPermission } from '../models/role/permission';
 
 export const permissions: IPermission[] = [{
   type: 'USER_READ',

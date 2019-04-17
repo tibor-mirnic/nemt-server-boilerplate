@@ -1,6 +1,6 @@
 import { Connection } from 'mongoose';
-import { Factory } from './../../../core/db/factory';
 
+import { Factory } from '../../../core/db/factory';
 import { UserSchema } from './schema';
 import { IUser } from './user';
 
@@ -19,6 +19,6 @@ export class UserFactory extends Factory<IUser> {
           'unique': true
         }
       }]
-    });    
+    });
   }
 }

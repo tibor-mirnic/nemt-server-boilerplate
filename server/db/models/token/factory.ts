@@ -1,6 +1,6 @@
 import { Connection } from 'mongoose';
-import { Factory } from './../../../core/db/factory';
 
+import { Factory } from '../../../core/db/factory';
 import { TokenSchema } from './schema';
 import { IToken } from './token';
 
@@ -33,6 +33,6 @@ export class TokenFactory extends Factory<IToken> {
           expireAfterSeconds: 1
         }
       }]
-    });    
+    });
   }
 }

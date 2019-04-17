@@ -6,16 +6,16 @@ import { Logger as WinstonLogger, LoggerInstance, transports } from 'winston';
 import { IResponse } from './models/express/response';
 import { ErrorBase } from './error/base';
 
-let logger: LoggerInstance; 
+let logger: LoggerInstance;
 
 export class Logger {
   constructor(folderPath: string) {
-    if(!logger) {
-      logger = new WinstonLogger({ 
-        emitErrs: true,        
+    if (!logger) {
+      logger = new WinstonLogger({
+        emitErrs: true,
         exitOnError: false
       });
-      
+
       logger.add(transports.DailyRotateFile, {
         level: 'debug',
         filename: path.join(folderPath, '.log'),
@@ -25,11 +25,11 @@ export class Logger {
         humanReadableUnhandledException: true,
         timestamp: true,
         json: false,
-        prettyPrint: false            
+        prettyPrint: false
       });
 
       logger.add(transports.Console, {
-        level:'debug',
+        level: 'debug',
         name: 'console',
         handleExceptions: true,
         humanReadableUnhandledException: true,
@@ -46,11 +46,9 @@ export class Logger {
     let msg = null;
     if (typeof (error) === 'string') {
       msg = error;
-    }
-    else if (error instanceof ErrorBase) {
+    } else if (error instanceof ErrorBase) {
       msg = error.prettify();
-    }
-    else {
+    } else {
       msg = error.stack || error.message;
     }
 
@@ -67,28 +65,27 @@ export class Logger {
 
   logRequest(error: any, response: IResponse) {
     let errorMsg = this.prettifyError(error);
-    if(response.onErrorRequestData) {
+    if (response.onErrorRequestData) {
       let msg = '\n';
-      
-      if(response.onErrorRequestData.userIdentifier) {
-        msg += `  User: ${response.onErrorRequestData.userIdentifier}\n`;
+
+      if (response.onErrorRequestData.userIdentifier) {
+        msg += `  User: ${ response.onErrorRequestData.userIdentifier }\n`;
       }
 
-      msg += `  Url: ${response.onErrorRequestData.url}\n`;
+      msg += `  Url: ${ response.onErrorRequestData.url }\n`;
 
-      if(response.onErrorRequestData.params) {
-        msg += `  Params: ${JSON.stringify(response.onErrorRequestData.params)}\n`;
+      if (response.onErrorRequestData.params) {
+        msg += `  Params: ${ JSON.stringify(response.onErrorRequestData.params) }\n`;
       }
 
-      if(response.onErrorRequestData.body) {
-        msg += `  Payload: ${JSON.stringify(response.onErrorRequestData.body)}\n`;
+      if (response.onErrorRequestData.body) {
+        msg += `  Payload: ${ JSON.stringify(response.onErrorRequestData.body) }\n`;
       }
 
-      msg += `  ${errorMsg}`;
-    
+      msg += `  ${ errorMsg }`;
+
       logger.error(msg);
-    }
-    else {
+    } else {
       logger.error(errorMsg);
     }
   }

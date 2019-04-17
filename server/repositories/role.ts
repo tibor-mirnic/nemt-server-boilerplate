@@ -1,6 +1,6 @@
-import { Server } from './../core/server';
-import { Repository } from './../core/repository';
-import { IRole } from './../db/models/role/role';
+import { Server } from '../core/server';
+import { Repository } from '../core/repository';
+import { IRole } from '../db/models/role/role';
 
 export class RoleRepository extends Repository<IRole> {
 

@@ -1,4 +1,4 @@
-import { ISoftDelete, IAuditInfo } from './../models/db/audit-info';
+import { IAuditInfo, ISoftDelete } from '../models/db/audit-info';
 
 export enum Operation {
   CREATE = 0,
@@ -23,7 +23,7 @@ export class AuditInfo {
     return model;
   }
 
-  static beforeDelete(model: ISoftDelete, userId: string) {  
+  static beforeDelete(model: ISoftDelete, userId: string) {
     let now = new Date();
     model.isDeleted = true;
     model.deletedAt = now;
@@ -33,15 +33,15 @@ export class AuditInfo {
   }
 
   static beforeSave(model: any, userId: string, operation: Operation) {
-    switch(operation) {
+    switch (operation) {
       case Operation.CREATE: {
         return AuditInfo.beforeCreate(model, userId);
       }
       case Operation.UPDATE: {
-        return AuditInfo.beforeUpdate(model, userId);      
+        return AuditInfo.beforeUpdate(model, userId);
       }
       case Operation.DELETE: {
-        return AuditInfo.beforeDelete(model, userId);    
+        return AuditInfo.beforeDelete(model, userId);
       }
       default: {
         return model;

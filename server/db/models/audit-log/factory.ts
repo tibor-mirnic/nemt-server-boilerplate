@@ -1,6 +1,6 @@
 import { Connection } from 'mongoose';
-import { Factory } from './../../../core/db/factory';
 
+import { Factory } from '../../../core/db/factory';
 import { AuditLogSchema } from './schema';
 import { IAuditLog } from './audit-log';
 
@@ -31,6 +31,6 @@ export class AuditLogFactory extends Factory<IAuditLog> {
           'createdAt': 1
         }
       }]
-    });    
+    });
   }
 }

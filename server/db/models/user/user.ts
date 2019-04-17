@@ -1,11 +1,10 @@
-import { IIdentifier } from './../../../core/models/db/identifier';
-import { ISoftDelete, IAuditInfo } from './../../../core/models/db/audit-info';
+import { IIdentifier } from '../../../core/models/db/identifier';
+import { IAuditInfo, ISoftDelete } from '../../../core/models/db/audit-info';
+import { IRole } from '../role/role';
 
-import { IRole } from './../role/role';
-
-export interface IUser extends IIdentifier, ISoftDelete, IAuditInfo {  
+export interface IUser extends IIdentifier, ISoftDelete, IAuditInfo {
   role?: IRole | null;
-  
+
   email: string;
   firstName: string;
   lastName: string;

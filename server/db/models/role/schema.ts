@@ -3,8 +3,8 @@ import { SchemaDefinition } from 'mongoose';
 export const RoleSchema: SchemaDefinition = {
   permissions: [{
     _id: false, // mongoose creates ids automatically
-    type: { 
-      type: String, 
+    type: {
+      type: String,
       required: true
     },
     description: {
@@ -12,8 +12,8 @@ export const RoleSchema: SchemaDefinition = {
       default: null
     }
   }],
-  type: { 
-    type: String, 
+  type: {
+    type: String,
     required: true
   },
   description: {
@@ -48,4 +48,4 @@ export const RoleSchema: SchemaDefinition = {
     type: String,
     default: null
   }
-}
+};

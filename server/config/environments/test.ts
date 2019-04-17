@@ -1,5 +1,6 @@
 import { join } from 'path';
-import { IEnvironment } from './../../core/models/environment';
+
+import { IEnvironment } from '../../core/models/environment';
 
 export const test: IEnvironment = {
   name: 'test',
@@ -11,7 +12,7 @@ export const test: IEnvironment = {
   },
   https: {
     host: '127.0.0.0.1',
-    port: 8043    
+    port: 8043
   },
   mongoDb: {
     url: '127.0.0.1:27017',

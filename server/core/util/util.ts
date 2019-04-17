@@ -1,11 +1,11 @@
-import { hashSync, compareSync, genSaltSync } from 'bcrypt-nodejs';
-import { randomBytes, createHash } from 'crypto';
+import { compareSync, genSaltSync, hashSync } from 'bcrypt-nodejs';
+import { createHash, randomBytes } from 'crypto';
 import * as moment from 'moment';
 import { tz } from 'moment-timezone';
 
-import { ValidationError } from './../error/user-friendly';
-import { MissingArgumentsError } from './../error/server';
-import { IPasswordRequirements } from './../models/constants';
+import { ValidationError } from '../error/user-friendly';
+import { MissingArgumentsError } from '../error/server';
+import { IPasswordRequirements } from '../models/constants';
 
 export class Util {
   static convertHoursToMilliseconds(hours: number) {
@@ -35,7 +35,7 @@ export class Util {
     }
 
     if (password.length < passwordRequirements.minLength) {
-    throw new ValidationError(`Password must be at least '${passwordRequirements.minLength} characters long`);
+      throw new ValidationError(`Password must be at least '${ passwordRequirements.minLength } characters long`);
     }
 
     if (passwordRequirements.numberRequired && !password.match(/\d/)) {
@@ -48,13 +48,13 @@ export class Util {
   }
 
   static toDictionary(array: any, key: string): any {
-    if(!Array.isArray(array) || !key) {
+    if (!Array.isArray(array) || !key) {
       throw new MissingArgumentsError('First argument must be an array');
     }
-    
+
     let dict: any = {};
     array.forEach(item => {
-      if(!dict[item[key]]) {
+      if (!dict[item[key]]) {
         dict[item[key]] = Object.assign({}, item);
       }
     });
@@ -63,15 +63,15 @@ export class Util {
   }
 
   static primitiveToComplexArray(array: any, key: string) {
-    if(!Array.isArray(array) || !key) {
+    if (!Array.isArray(array) || !key) {
       throw new MissingArgumentsError('Argument must be an array');
     }
 
     let complexArray: any[] = [];
     array.forEach((item, index) => {
       let complex: any = {};
-      complex['_id']= index;
-      complex[key]= item;
+      complex['_id'] = index;
+      complex[key] = item;
       complexArray.push(complex);
     });
 
@@ -84,11 +84,11 @@ export class Util {
     let extension = (parts[1] || '').toLowerCase();
     let timeStamp = moment(new Date()).format('YYYY-MM-DD-HH-mm-ss');
 
-    return `${name}-${timeStamp}.${extension}`;
+    return `${ name }-${ timeStamp }.${ extension }`;
   }
 
   static humanizeDate(date?: Date): string {
-    if(!date) {
+    if (!date) {
       return '';
     }
 
@@ -97,6 +97,6 @@ export class Util {
 
   static formatTimezone(timezoneId: string): string {
     let userFriendlyName = timezoneId.replace(/_/gi, ' ');
-    return `${userFriendlyName} ${tz(timezoneId).format('Z')}`
+    return `${ userFriendlyName } ${ tz(timezoneId).format('Z') }`;
   }
 }

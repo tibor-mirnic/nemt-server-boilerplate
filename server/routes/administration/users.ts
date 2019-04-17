@@ -1,13 +1,13 @@
 import { NextFunction } from 'express';
 
-import { Router } from './../../core/express/router';
-import { Server } from './../../core/server';
-import { IRequest } from './../../core/models/express/request';
-import { IResponse } from './../../core/models/express/response';
-import { UserRepository } from './../../repositories/user';
+import { Router } from '../../core/express/router';
+import { Server } from '../../core/server';
+import { IRequest } from '../../core/models/express/request';
+import { IResponse } from '../../core/models/express/response';
+import { UserRepository } from '../../repositories/user';
 
 export class UserRouter extends Router {
-  
+
   constructor(server: Server) {
     super(server);
   }
@@ -23,13 +23,10 @@ export class UserRouter extends Router {
   async queryAll(request: IRequest, response: IResponse, next: NextFunction) {
     try {
       let ur = new UserRepository(this.server, this.getUserId(request));
-      
-      let users = await ur.query();
-      
-      response.data = users;
+
+      response.data = await ur.query();
       return next();
-    }
-    catch(error) {
+    } catch (error) {
       next(this.handleError(error, request, response));
     }
   }
@@ -38,25 +35,23 @@ export class UserRouter extends Router {
     try {
       let ur = new UserRepository(this.server, this.getUserId(request));
       let id = request.params.id;
-      
-      id.forEach((element:any) => {
-        console.log(element)
+
+      id.forEach((element: any) => {
+        console.log(element);
       });
-      
+
       let user = await ur.findOne({
         '_id': id
       });
 
-      if(user) {        
+      if (user) {
         response.data = user;
-      }
-      else {
+      } else {
         response.data = {};
       }
 
       return next();
-    }
-    catch(error) {
+    } catch (error) {
       next(this.handleError(error, request, response));
     }
   }
