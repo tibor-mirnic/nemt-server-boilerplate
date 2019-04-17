@@ -1,27 +1,28 @@
 import * as passport from 'passport';
 import { Strategy as Local } from 'passport-local';
-import { Strategy as Bearer } from 'passport-http-bearer';
+import { IVerifyOptions, Strategy as Bearer } from 'passport-http-bearer';
 
 import { Server } from '../server';
 import { IRequest } from '../models/express/request';
-import { IPassportInfo } from '../models/passport';
 import { AuthenticationError } from '../error/auth';
 import { ForbiddenError } from '../error/forbidden';
 import { Util } from '../util/util';
 import { GoogleUtil } from '../util/google';
-import { UserRepository } from '../../repositories/user';
+
+import { StrategiesRepository } from '../../repositories/strategies';
 import { IUser } from '../../db/models/user/user';
+
 import { TokenRepository } from '../../repositories/token';
 
 export class PassportStrategies {
   server: Server;
-  userRepository: UserRepository;
+  strategiesRepository: StrategiesRepository;
   tokenRepository: TokenRepository;
 
   constructor(server: Server) {
     this.server = server;
 
-    this.userRepository = new UserRepository(this.server, this.server.systemUserId);
+    this.strategiesRepository = new StrategiesRepository(this.server);
     this.tokenRepository = new TokenRepository(server);
 
     this.build();
@@ -42,14 +43,14 @@ export class PassportStrategies {
     request: IRequest,
     email: string,
     password: string,
-    done: (err: any, user?: IUser, info?: IPassportInfo) => void
+    done: (err: any, user?: IUser) => void
   ) {
     try {
       if (!email || !password) {
         throw new AuthenticationError('Missing email or password fields!');
       }
 
-      let dbUser = await this.userRepository.findOne({
+      const dbUser = await this.strategiesRepository.findOne({
         'email': email,
         'status': 'active'
       });
@@ -59,7 +60,7 @@ export class PassportStrategies {
       }
 
       if (request.body.googleLogin) {
-        let data: any = await GoogleUtil.validateToken(password, this.server.environment.googleConfiguration.clientId, this.server.constants.googleTokenAuth);
+        const data: any = await GoogleUtil.validateToken(password, this.server.environment.googleConfiguration.clientId, this.server.constants.googleTokenAuth);
 
         if (data.email && data.email !== email) {
           throw new AuthenticationError('Login email mismatch!');
@@ -76,16 +77,16 @@ export class PassportStrategies {
 
   async bearer(
     token: string,
-    done: (err: any, user?: IUser, info?: IPassportInfo) => void
+    done: (err: any, user?: IUser, options?: IVerifyOptions | string) => void
   ) {
     try {
-      let errorObj = new ForbiddenError('Unauthorized!');
+      const errorObj = new ForbiddenError('Unauthorized!');
 
-      if (typeof (token) === 'undefined' || token === '') {
+      if (typeof token === 'undefined' || token === '') {
         throw errorObj;
       }
 
-      let dbToken = await this.tokenRepository.findOne({
+      const dbToken = await this.tokenRepository.findOne({
         'token': token,
         'type': { $in: ['access', 'admin'] }
       });
@@ -98,7 +99,7 @@ export class PassportStrategies {
         throw errorObj;
       }
 
-      let dbUser = await this.userRepository.findOne({
+      const dbUser = await this.strategiesRepository.findOne({
         '_id': dbToken.user.toString(),
         'status': 'active'
       });
@@ -107,9 +108,7 @@ export class PassportStrategies {
         throw errorObj;
       }
 
-      return done(null, dbUser, {
-        token: token
-      });
+      return done(null, dbUser, token);
     } catch (error) {
       done(error);
     }

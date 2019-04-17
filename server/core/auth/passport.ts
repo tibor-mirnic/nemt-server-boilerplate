@@ -1,10 +1,10 @@
 import * as passport from 'passport';
+import { IVerifyOptions } from 'passport-http-bearer';
 import { NextFunction } from 'express';
 
 import { Server } from '../server';
 import { IRequest } from '../models/express/request';
 import { IResponse } from '../models/express/response';
-import { IPassportInfo } from '../models/passport';
 import { ForbiddenError } from '../error/forbidden';
 import { IUser } from '../../db/models/user/user';
 import { PassportStrategies } from './strategies';
@@ -21,35 +21,35 @@ export class Passport {
 
   local(request: IRequest, response: IResponse, next: NextFunction) {
     passport.authenticate('local', { session: false },
-      (error: any, user: IUser, info: IPassportInfo) => {
+      (error: any, user: IUser) => {
         if (error) {
-          return next(error);
+          next(error);
         }
 
         request.user = user;
-        return next();
+        next();
       }
     )(request, response, next);
   }
 
   bearer(request: IRequest, response: IResponse, next: NextFunction) {
     passport.authenticate('bearer', { session: false },
-      (error: any, user: IUser, info: IPassportInfo) => {
+      (error: any, user: IUser, options?: IVerifyOptions | string) => {
         if (error) {
-          return next(error);
+          next(error);
         }
 
         if (!user) {
-          return next(new ForbiddenError('Unauthorized!'));
+          next(new ForbiddenError('Unauthorized!'));
         }
 
         request.user = user;
 
-        if (info && info.token) {
-          request.token = info.token;
+        if (options && typeof options === 'string') {
+          request.token = options;
         }
 
-        return next();
+        next();
       }
     )(request, response, next);
   }

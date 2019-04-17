@@ -1,6 +1,4 @@
-let fileStreamRotator = require('file-stream-rotator');
-let busboy = require('connect-busboy');
-
+import { IUser } from '../db/models/user/user';
 import * as express from 'express';
 import { Document } from 'mongoose';
 import { join } from 'path';
@@ -37,6 +35,9 @@ import { AuditLogRepository } from '../repositories/audit-log';
 import { RoleRepository } from '../repositories/role';
 import { IRole } from '../db/models/role/role';
 import { UserRepository } from '../repositories/user';
+
+let fileStreamRotator = require('file-stream-rotator');
+let busboy = require('connect-busboy');
 
 export class Server {
   public serverLogPath: string;
@@ -215,7 +216,7 @@ export class Server {
       system.firstName = 'SYSTEM';
       system.lastName = 'SYSTEM';
       system.isSystem = true;
-      system.isDeleted = true;
+      (<IUser>system).isDeleted = true; // Casting due to interference with Document isDeleted
       system.role = undefined;
 
       await system.save();
