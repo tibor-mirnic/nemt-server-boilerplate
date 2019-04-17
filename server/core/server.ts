@@ -17,7 +17,6 @@ import { Logger } from './logger';
 import { IEnvironment } from './models/environment';
 import { Environment } from './environment';
 import { IConstants } from './models/constants';
-import { ICache } from './models/cache';
 import { DbContext } from './db/db-context';
 import { Passport } from './auth/passport';
 
@@ -33,10 +32,6 @@ import { ErrorHandler } from './handlers/error';
 import { RoutesModule } from '../routes/module';
 // db
 import { permissions } from '../db/static/permissions';
-// cache
-import { UserCache } from '../cache/user';
-import { ReportCache } from './cache/report';
-import { TokenCache } from './cache/token';
 // repositories
 import { AuditLogRepository } from '../repositories/audit-log';
 import { RoleRepository } from '../repositories/role';
@@ -62,8 +57,6 @@ export class Server {
   public passport: Passport;
 
   public systemUserId: string;
-
-  public cache: ICache;
 
   constructor() {
     this.initFolderPaths();
@@ -100,9 +93,6 @@ export class Server {
       // setup database users and permissions
       let superAdminRole = await server.upsertSuperAdminRole();
       await server.upsertSuperAdminUser(superAdminRole);
-
-      // had to be here because we need systemUser in the database
-      server.initCache();
 
       // start server
       server.startServer();
@@ -207,15 +197,6 @@ export class Server {
     createServer(options, <any>this.app).listen(this.environment.https.port, () => {
       this.logger.info(`NODE: HTTPS listening on port ${ this.environment.https.port }.`);
     });
-  }
-
-  // add all database caches
-  initCache() {
-    this.cache = {
-      report: ReportCache,
-      token: TokenCache,
-      user: new UserCache(this)
-    };
   }
 
   // create AuditLogger
