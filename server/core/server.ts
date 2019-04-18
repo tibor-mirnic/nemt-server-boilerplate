@@ -46,7 +46,6 @@ export class Server {
 
   public app: express.Application;
 
-  public logger: Logger;
   public environment: IEnvironment;
   public constants: IConstants;
 
@@ -62,7 +61,7 @@ export class Server {
   constructor() {
     this.initFolderPaths();
 
-    this.logger = new Logger(this.serverLogPath);
+    Logger.init(this.serverLogPath);
     this.environment = Environment.load();
   }
 
@@ -106,7 +105,7 @@ export class Server {
 
   async initDatabase() {
     try {
-      this.dbContext = await DbContext.connect(this.environment, this.logger);
+      this.dbContext = await DbContext.connect(this.environment);
       this.factories = FactoryBuilder.build(this.dbContext.getConnection());
     } catch (error) {
       throw error;
@@ -196,7 +195,7 @@ export class Server {
     };
 
     createServer(options, <any>this.app).listen(this.environment.https.port, () => {
-      this.logger.info(`NODE: HTTPS listening on port ${ this.environment.https.port }.`);
+      Logger.info(`NODE: HTTPS listening on port ${ this.environment.https.port }.`);
     });
   }
 

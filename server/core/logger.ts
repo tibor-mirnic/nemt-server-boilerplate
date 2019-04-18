@@ -9,7 +9,7 @@ import { ErrorBase } from './error/base';
 let logger: LoggerInstance;
 
 export class Logger {
-  constructor(folderPath: string) {
+  static init(folderPath: string) {
     if (!logger) {
       logger = new WinstonLogger({
         emitErrs: true,
@@ -42,9 +42,9 @@ export class Logger {
     }
   }
 
-  prettifyError(error: any): string {
+  static prettifyError(error: any): string {
     let msg = null;
-    if (typeof (error) === 'string') {
+    if (typeof error === 'string') {
       msg = error;
     } else if (error instanceof ErrorBase) {
       msg = error.prettify();
@@ -55,16 +55,16 @@ export class Logger {
     return msg;
   }
 
-  info(msg: string) {
+  static info(msg: string) {
     logger.info(msg);
   }
 
-  error(error: any) {
-    logger.error(this.prettifyError(error));
+  static error(error: any) {
+    logger.error(Logger.prettifyError(error));
   }
 
-  logRequest(error: any, response: IResponse) {
-    let errorMsg = this.prettifyError(error);
+  static logRequest(error: any, response: IResponse) {
+    const errorMsg = Logger.prettifyError(error);
     if (response.onErrorRequestData) {
       let msg = '\n';
 

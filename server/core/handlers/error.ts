@@ -8,6 +8,7 @@ import { UserFriendlyError } from '../error/user-friendly';
 import { NotFoundError } from '../error/not-found';
 import { IRequest } from '../models/express/request';
 import { IResponse } from '../models/express/response';
+import { Logger } from '../logger';
 
 export class ErrorHandler {
   server: Server;
@@ -43,7 +44,7 @@ export class ErrorHandler {
 
     // log error
     if (!isUserFriendly) {
-      this.server.logger.logRequest(error, response);
+      Logger.logRequest(error, response);
     }
   }
 }
