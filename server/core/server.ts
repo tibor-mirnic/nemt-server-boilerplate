@@ -176,15 +176,12 @@ export class Server {
   }
 
   useHandlers() {
-    const successHandler = new SuccessHandler(this);
-    const errorHandler = new ErrorHandler(this);
-
     this.app.use((request: IRequest, response: IResponse, next: express.NextFunction) => {
-      successHandler.process(request, response, next);
+      SuccessHandler.process(request, response, next);
     });
 
     this.app.use((error: any, request: IRequest, response: IResponse, next: express.NextFunction) => {
-      errorHandler.process(error, request, response, next);
+      ErrorHandler.process(error, request, response, next);
     });
   }
 
