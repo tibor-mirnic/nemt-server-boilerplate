@@ -1,4 +1,5 @@
 import { IUser } from '../db/models/user/user';
+
 import * as express from 'express';
 import { Document } from 'mongoose';
 import { join } from 'path';
@@ -68,7 +69,7 @@ export class Server {
   // run the server
   static async bootstrap() {
     try {
-      let server = new Server();
+      const server = new Server();
 
       await server.initDatabase();
 
@@ -91,7 +92,7 @@ export class Server {
       server.useHandlers();
 
       // setup database users and permissions
-      let superAdminRole = await server.upsertSuperAdminRole();
+      const superAdminRole = await server.upsertSuperAdminRole();
       await server.upsertSuperAdminUser(superAdminRole);
 
       // start server
@@ -119,7 +120,7 @@ export class Server {
   }
 
   useHeaders() {
-    let corsOptions = {
+    const corsOptions = {
       origin: RegExp(this.environment.corsRegex),
       credentials: true
     };
@@ -150,7 +151,7 @@ export class Server {
   }
 
   useMorgan() {
-    let accessLogStream = fileStreamRotator.getStream({
+    const accessLogStream = fileStreamRotator.getStream({
       'date_format': 'YYYY-MM-DD',
       'filename': join(this.httpLogPath, '%DATE%.log'),
       'frequency': 'daily',
@@ -170,13 +171,13 @@ export class Server {
   }
 
   useRoutes() {
-    let routingModule = new RoutesModule(this);
+    const routingModule = new RoutesModule(this);
     routingModule.build();
   }
 
   useHandlers() {
-    let successHandler = new SuccessHandler(this);
-    let errorHandler = new ErrorHandler(this);
+    const successHandler = new SuccessHandler(this);
+    const errorHandler = new ErrorHandler(this);
 
     this.app.use((request: IRequest, response: IResponse, next: express.NextFunction) => {
       successHandler.process(request, response, next);
@@ -188,7 +189,7 @@ export class Server {
   }
 
   startServer() {
-    let options: ServerOptions = {
+    const options: ServerOptions = {
       key: readFileSync(this.environment.keys.key),
       cert: readFileSync(this.environment.keys.cert),
       passphrase: this.environment.keys.passphrase
@@ -215,7 +216,7 @@ export class Server {
       system.firstName = 'SYSTEM';
       system.lastName = 'SYSTEM';
       system.isSystem = true;
-      (<IUser>system).isDeleted = true; // Casting due to interference with Document isDeleted
+      (<IUser>system).isDeleted = true;
       system.role = undefined;
 
       await system.save();
@@ -225,7 +226,7 @@ export class Server {
   }
 
   async upsertSuperAdminRole(): Promise<Document & IRole> {
-    let rr = new RoleRepository(this, this.systemUserId);
+    const rr = new RoleRepository(this, this.systemUserId);
 
     let superAdminRole = await rr.databaseModel.findOne({
       'type': 'SUPER_ADMIN'
@@ -235,21 +236,11 @@ export class Server {
       superAdminRole = await rr.create(role => {
         role.type = 'SUPER_ADMIN';
         role.description = 'Super administrator';
-        role.permissions = permissions.map(permission => {
-          return {
-            'type': permission.type,
-            'description': permission.description
-          };
-        });
+        role.permissions = permissions;
       });
     } else {
       superAdminRole = await rr.update(superAdminRole._id.toString(), role => {
-        role.permissions = permissions.map(permission => {
-          return {
-            'type': permission.type,
-            'description': permission.description
-          };
-        });
+        role.permissions = permissions;
       });
     }
 
@@ -257,9 +248,9 @@ export class Server {
   }
 
   async upsertSuperAdminUser(superAdminRole: Document & IRole) {
-    let ur = new UserRepository(this, this.systemUserId);
+    const ur = new UserRepository(this, this.systemUserId);
 
-    let admin = await ur.databaseModel.findOne({
+    const admin = await ur.databaseModel.findOne({
       'isAdmin': true
     });
 
