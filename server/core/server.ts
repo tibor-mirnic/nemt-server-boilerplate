@@ -106,7 +106,7 @@ export class Server {
   async initDatabase() {
     try {
       this.dbContext = await DbContext.connect(this.environment);
-      this.factories = FactoryBuilder.build(this.dbContext.getConnection());
+      this.factories = FactoryBuilder.build(DbContext.getConnection());
     } catch (error) {
       throw error;
     }
@@ -162,7 +162,7 @@ export class Server {
   }
 
   checkConnection() {
-    this.app.use(this.dbContext.checkConnection.bind(this.dbContext));
+    this.app.use(DbContext.checkConnection.bind(this.dbContext));
   }
 
   usePassport() {

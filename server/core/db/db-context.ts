@@ -32,7 +32,7 @@ export class DbContext extends EventEmitter {
   }
 
   initConnection() {
-    let me = this;
+    const me = this;
 
     this.mongoUri = `mongodb://${ this.environment.mongoDb.url }/${ this.environment.mongoDb.databaseName }`;
 
@@ -75,13 +75,13 @@ export class DbContext extends EventEmitter {
 
   static async connect(environment: IEnvironment, poolSize = 30): Promise<DbContext> {
     try {
-      let dbContext = await new Promise<DbContext | null>((resolve, reject) => {
-        let context = new DbContext(environment, poolSize);
+      const dbContext = await new Promise<DbContext | null>((resolve, reject) => {
+        const context = new DbContext(environment, poolSize);
         context.on('connection-established', () => {
           resolve(context);
         });
 
-        context.on('connection-failed', (error) => {
+        context.on('connection-failed', error => {
           reject(error);
         });
       });
@@ -114,20 +114,16 @@ export class DbContext extends EventEmitter {
     }
   }
 
-  isConnected(): boolean {
-    return connectionEstablished;
-  }
-
-  getConnection(): mongoose.Connection {
+  static getConnection(): mongoose.Connection {
     return dbConnection;
   }
 
-  checkConnection(request: IRequest, response: IResponse, next: NextFunction) {
+  static checkConnection(request: IRequest, response: IResponse, next: NextFunction) {
     if (!connectionEstablished) {
       Logger.info('MONGO - Database connection could not be established!');
-      return next(new DatabaseError('Could not connect to the database!'));
+      next(new DatabaseError('Could not connect to the database!'));
     }
 
-    return next();
+    next();
   }
 }
