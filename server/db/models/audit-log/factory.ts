@@ -10,27 +10,13 @@ export class AuditLogFactory extends Factory<IAuditLog> {
       connection: connection,
       name: 'AuditLog',
       definition: AuditLogSchema,
-      indexes: [{
-        fields: {
-          'collectionName': 1
-        }
-      }, {
-        fields: {
-          'entityId': 1
-        }
-      }, {
-        fields: {
-          'userId': 1
-        }
-      }, {
-        fields: {
-          'operation': 1
-        }
-      }, {
-        fields: {
-          'createdAt': 1
-        }
-      }]
+      indexes: [
+        { fields: { 'collectionName': 1 } },
+        { fields: { 'entityId': 1 } },
+        { fields: { 'userId': 1 } },
+        { fields: { 'operation': 1 } },
+        { fields: { 'createdAt': 1 } }
+      ]
     });
   }
 }

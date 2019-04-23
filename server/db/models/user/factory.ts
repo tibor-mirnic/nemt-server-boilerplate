@@ -10,15 +10,17 @@ export class UserFactory extends Factory<IUser> {
       connection: connection,
       name: 'User',
       definition: UserSchema,
-      indexes: [{
-        fields: {
-          'email': 1,
-          'deletedAt': 1
-        },
-        options: {
-          'unique': true
+      indexes: [
+        {
+          fields: {
+            'email': 1,
+            'deletedAt': 1
+          },
+          options: {
+            'unique': true
+          }
         }
-      }]
+      ]
     });
   }
 }

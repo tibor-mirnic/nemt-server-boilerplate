@@ -26,7 +26,35 @@ export const TokenSchema: SchemaDefinition = {
     type: Date,
     default: function () {
       // default expire at 20 minutes
-      return new Date(Date.now() + (20 * 60 * 1000));
+      return new Date(Date.now() + 20 * 60 * 1000);
     }
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false
+  },
+  deletedAt: {
+    type: Date,
+    default: null
+  },
+  deletedBy: {
+    type: String,
+    default: null
+  },
+  createdAt: {
+    type: Date,
+    default: null
+  },
+  createdBy: {
+    type: String,
+    default: null
+  },
+  updatedAt: {
+    type: Date,
+    default: null
+  },
+  updatedBy: {
+    type: String,
+    default: null
   }
 };

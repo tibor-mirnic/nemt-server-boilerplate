@@ -24,15 +24,15 @@ export const RoleSchema: SchemaDefinition = {
     type: Boolean,
     default: false
   },
-  createdAt: {
-    type: Date,
-    default: null
-  },
-  updatedAt: {
-    type: Date,
-    default: null
-  },
   deletedAt: {
+    type: Date,
+    default: null
+  },
+  deletedBy: {
+    type: String,
+    default: null
+  },
+  createdAt: {
     type: Date,
     default: null
   },
@@ -40,11 +40,11 @@ export const RoleSchema: SchemaDefinition = {
     type: String,
     default: null
   },
-  updatedBy: {
-    type: String,
+  updatedAt: {
+    type: Date,
     default: null
   },
-  deletedBy: {
+  updatedBy: {
     type: String,
     default: null
   }
