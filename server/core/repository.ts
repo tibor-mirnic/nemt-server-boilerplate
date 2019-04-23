@@ -3,7 +3,7 @@ import { cloneDeep, merge, mergeWith } from 'lodash';
 
 import { Factory } from './db/factory';
 import { IAggregationQuery, IRepositoryConfiguration, transformAggregationQuery } from './extensions/repository';
-import { AuditInfo, Operation } from './extensions/audit-info';
+import { AuditInfo } from './extensions/audit-info';
 import { DatabaseError } from './error/server';
 import { NotFoundError } from './error/not-found';
 import { IIdentifier } from './models/db/identifier';
@@ -187,7 +187,7 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
       const model = new this.databaseModel();
 
       init(model);
-      AuditInfo.beforeSave(model, this.userId, Operation.CREATE);
+      AuditInfo.beforeCreate(model, this.userId);
 
       await model.save();
       await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.CREATE, {}, this.transformObject(model));
@@ -211,7 +211,7 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
       const dataBefore = this.transformObject(model);
 
       update(model);
-      AuditInfo.beforeSave(model, this.userId, Operation.UPDATE);
+      AuditInfo.beforeUpdate(model, this.userId);
 
       await model.save();
       await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.UPDATE, dataBefore, this.transformObject(model));
@@ -241,7 +241,7 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
       }
 
       const dataBefore = this.transformObject(model);
-      AuditInfo.beforeSave(model, this.userId, Operation.DELETE);
+      AuditInfo.beforeDelete(model, this.userId);
 
       await model.save();
       await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.DELETE, dataBefore, this.transformObject(model));
