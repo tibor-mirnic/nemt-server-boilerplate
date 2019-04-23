@@ -37,8 +37,8 @@ import { RoleRepository } from '../repositories/role';
 import { IRole } from '../db/models/role/role';
 import { UserRepository } from '../repositories/user';
 
-let fileStreamRotator = require('file-stream-rotator');
-let busboy = require('connect-busboy');
+const fileStreamRotator = require('file-stream-rotator');
+const busboy = require('connect-busboy');
 
 export class Server {
   public serverLogPath: string;
