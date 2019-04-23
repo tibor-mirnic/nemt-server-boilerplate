@@ -60,7 +60,7 @@ export class PassportStrategies {
       }
 
       if (request.body.googleLogin) {
-        const data: any = await GoogleUtil.validateToken(password, this.server.environment.googleConfiguration.clientId, this.server.constants.googleTokenAuth);
+        const data: any = await GoogleUtil.validateToken(this.server.constants.googleTokenAuth, password, this.server.environment.googleConfiguration.clientId);
 
         if (data.email && data.email !== email) {
           throw new AuthenticationError('Login email mismatch!');
