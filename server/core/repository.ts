@@ -356,7 +356,7 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
    */
   async distinct(query = ''): Promise<(Document & E)[]> {
     try {
-      const q = this.databaseModel.distinct(query);
+      const q = this.databaseModel.distinct(query, this.aggregationQuery.$match);
 
       return await q;
     } catch (error) {
