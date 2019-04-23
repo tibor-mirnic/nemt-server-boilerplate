@@ -11,8 +11,19 @@ export class Router {
 
   constructor(server: Server) {
     this.server = server;
-
     this.router = ExpressRouter();
+  }
+
+  static handleError(error: any, request: IRequest, response: IResponse): any {
+    const emptyObject = JSON.stringify({});
+    response.onErrorRequestData = {
+      userIdentifier: request.user ? request.user.email : undefined,
+      url: request.originalUrl,
+      params: emptyObject === JSON.stringify(request.params) ? undefined : request.params,
+      body: emptyObject === JSON.stringify(request.body) ? undefined : request.body
+    };
+
+    return error;
   }
 
   initRoutes() {
@@ -32,17 +43,5 @@ export class Router {
     }
 
     return id;
-  }
-
-  handleError(error: any, request: IRequest, response: IResponse): any {
-    let emptyObject = JSON.stringify({});
-    response.onErrorRequestData = {
-      userIdentifier: request.user ? request.user.email : undefined,
-      url: request.originalUrl,
-      params: emptyObject === JSON.stringify(request.params) ? undefined : request.params,
-      body: emptyObject === JSON.stringify(request.body) ? undefined : request.body
-    };
-
-    return error;
   }
 }

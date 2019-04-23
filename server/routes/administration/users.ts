@@ -27,7 +27,7 @@ export class UserRouter extends Router {
       response.data = await ur.query();
       return next();
     } catch (error) {
-      next(this.handleError(error, request, response));
+      next(Router.handleError(error, request, response));
     }
   }
 
@@ -52,7 +52,7 @@ export class UserRouter extends Router {
 
       return next();
     } catch (error) {
-      next(this.handleError(error, request, response));
+      next(Router.handleError(error, request, response));
     }
   }
 }
