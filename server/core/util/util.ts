@@ -8,12 +8,8 @@ import { MissingArgumentsError } from '../error/server';
 import { IPasswordRequirements } from '../models/constants';
 
 export class Util {
-  static convertHoursToMilliseconds(hours: number) {
-    return hours * 60 * 60 * 1000;
-  }
-
   static generateHash(text = ''): string {
-    let salt = genSaltSync(8);
+    const salt = genSaltSync(8);
     return hashSync(text, salt);
   }
 
@@ -29,7 +25,7 @@ export class Util {
     return createHash('sha1').update(token).digest('hex');
   }
 
-  static validatePassword(password: string, passwordRequirements: IPasswordRequirements) {
+  static validatePassword(password: string | any, passwordRequirements: IPasswordRequirements) {
     if (!password || typeof (password) !== 'string') {
       throw new ValidationError('Password provided not valid');
     }
@@ -52,7 +48,7 @@ export class Util {
       throw new MissingArgumentsError('First argument must be an array');
     }
 
-    let dict: any = {};
+    const dict: any = {};
     array.forEach(item => {
       if (!dict[item[key]]) {
         dict[item[key]] = Object.assign({}, item);
@@ -67,9 +63,9 @@ export class Util {
       throw new MissingArgumentsError('Argument must be an array');
     }
 
-    let complexArray: any[] = [];
+    const complexArray: any[] = [];
     array.forEach((item, index) => {
-      let complex: any = {};
+      const complex: any = {};
       complex['_id'] = index;
       complex[key] = item;
       complexArray.push(complex);
@@ -79,10 +75,10 @@ export class Util {
   }
 
   static humanizeFileName(fileName: string): string {
-    let parts = fileName.split('.');
-    let name = (parts[0].replace(' ', '_') || '').toLowerCase();
-    let extension = (parts[1] || '').toLowerCase();
-    let timeStamp = moment(new Date()).format('YYYY-MM-DD-HH-mm-ss');
+    const parts = fileName.split('.');
+    const name = (parts[0].replace(' ', '_') || '').toLowerCase();
+    const extension = (parts[1] || '').toLowerCase();
+    const timeStamp = moment(new Date()).format('YYYY-MM-DD-HH-mm-ss');
 
     return `${ name }-${ timeStamp }.${ extension }`;
   }
@@ -96,7 +92,7 @@ export class Util {
   }
 
   static formatTimezone(timezoneId: string): string {
-    let userFriendlyName = timezoneId.replace(/_/gi, ' ');
+    const userFriendlyName = timezoneId.replace(/_/gi, ' ');
     return `${ userFriendlyName } ${ tz(timezoneId).format('Z') }`;
   }
 }
