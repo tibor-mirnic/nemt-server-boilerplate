@@ -5,7 +5,6 @@ export interface IRepositoryConfiguration<E> {
   factory: Factory<E>;
   userId: string;
   aggregationQuery: IAggregationQuery;
-  processDocument?: (record: E) => void;
 
   auditLogger: IAuditLogger;
 }
@@ -37,7 +36,7 @@ export interface IAggregationQuery {
 }
 
 export const transformAggregationQuery = (aggregated: IAggregationQuery, skipAndLimit = true): any[] => {
-  let query: any[] = [];
+  const query: any[] = [];
 
   if (aggregated.$arrayUnwind) {
     aggregated.$arrayUnwind.forEach(path => {

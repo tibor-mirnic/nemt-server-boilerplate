@@ -24,7 +24,6 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
 
   private readonly userId: string;
   private readonly aggregationQuery: IAggregationQuery;
-  private readonly processDocument?: (record: E) => void;
 
   constructor(config: IRepositoryConfiguration<E>) {
     this.factory = config.factory;
@@ -34,7 +33,6 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
         '__v': 0
       }
     }, config.aggregationQuery);
-    this.processDocument = config.processDocument;
 
     this.auditLogger = config.auditLogger;
   }
@@ -77,13 +75,7 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
    * @memberof Repository
    */
   transformObject(model: Document & E): E {
-    const viewModel: E = <E>model.toJSON();
-
-    if (this.processDocument) {
-      this.processDocument(viewModel);
-    }
-
-    return viewModel;
+    return <E>model.toJSON();
   }
 
   /**
