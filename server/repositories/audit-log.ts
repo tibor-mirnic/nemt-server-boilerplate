@@ -18,7 +18,7 @@ export class AuditLogRepository implements IAuditLogger {
 
   public async log(collectionName: string, entityId: string, userId: string, operation: AuditLogOperation, dataBefore: any, dataAfter: any): Promise<void> {
     try {
-      let model = new this.databaseModel();
+      const model = new this.databaseModel();
 
       model.collectionName = collectionName;
       model.entityId = entityId;
