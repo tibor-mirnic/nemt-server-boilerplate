@@ -7,6 +7,7 @@ import { AuditInfo, Operation } from './extensions/audit-info';
 import { DatabaseError } from './error/server';
 import { NotFoundError } from './error/not-found';
 import { IIdentifier } from './models/db/identifier';
+import { IAuditInfo, ISoftDelete } from './models/db/audit-info';
 import { AuditLogOperation, IAuditLogger } from './models/audit-log';
 
 /**
@@ -16,22 +17,19 @@ import { AuditLogOperation, IAuditLogger } from './models/audit-log';
  * @class Repository
  * @template E Model interface
  */
-export class Repository<E extends IIdentifier> {
-  private factory: Factory<E>;
-  private userId: string;
-  private aggreagationQuery: IAggregationQuery;
-  private processDocument?: (record: E) => void;
-
+export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
   public auditLogger: IAuditLogger;
 
-  get databaseModel(): Model<Document & E> {
-    return this.factory.model;
-  }
+  private factory: Factory<E>;
+
+  private readonly userId: string;
+  private readonly aggregationQuery: IAggregationQuery;
+  private readonly processDocument?: (record: E) => void;
 
   constructor(config: IRepositoryConfiguration<E>) {
     this.factory = config.factory;
     this.userId = config.userId;
-    this.aggreagationQuery = merge(<IAggregationQuery>{
+    this.aggregationQuery = merge(<IAggregationQuery>{
       $project: {
         '__v': 0
       }
@@ -39,6 +37,36 @@ export class Repository<E extends IIdentifier> {
     this.processDocument = config.processDocument;
 
     this.auditLogger = config.auditLogger;
+  }
+
+  get databaseModel(): Model<Document & E> {
+    return this.factory.model;
+  }
+
+  /**
+   * lodash mergeWith customizer
+   * If propery is an array do not merge, just overwrite destination with source
+   *
+   * @param {*} value
+   * @param {*} srcValue
+   * @param {string} key
+   * @param {*} object
+   * @param {*} source
+   * @returns {*}
+   * @memberof Repository
+   */
+  static mergeWithCustomizer(value: any, srcValue: any, key: string, object: any, source: any): any {
+    if (Array.isArray(object[key])) {
+      return cloneDeep(source[key]);
+    }
+
+    if (key === '$sort') {
+      if (JSON.stringify(srcValue) === JSON.stringify({})) {
+        return object[key];
+      } else {
+        return srcValue;
+      }
+    }
   }
 
   /**
@@ -49,7 +77,7 @@ export class Repository<E extends IIdentifier> {
    * @memberof Repository
    */
   transformObject(model: Document & E): E {
-    let viewModel: E = <E>model.toJSON();
+    const viewModel: E = <E>model.toJSON();
 
     if (this.processDocument) {
       this.processDocument(viewModel);
@@ -72,32 +100,6 @@ export class Repository<E extends IIdentifier> {
   }
 
   /**
-   * lodash mergeWith customizer
-   * If propery is an array do not merge, just overwrite destination with source
-   *
-   * @param {*} value
-   * @param {*} srcValue
-   * @param {string} key
-   * @param {*} object
-   * @param {*} source
-   * @returns {*}
-   * @memberof Repository
-   */
-  mergeWithCustomizer(value: any, srcValue: any, key: string, object: any, source: any): any {
-    if (Array.isArray(object[key])) {
-      return cloneDeep(source[key]);
-    }
-
-    if (key === '$sort') {
-      if (JSON.stringify(srcValue) === JSON.stringify({})) {
-        return object[key];
-      } else {
-        return srcValue;
-      }
-    }
-  }
-
-  /**
    * Returns model or throws NotFound exception
    *
    * @param {string} id
@@ -106,7 +108,7 @@ export class Repository<E extends IIdentifier> {
    */
   async getById(id: string): Promise<Document & E> {
     try {
-      let model = await this.databaseModel.findById(id);
+      const model = await this.databaseModel.findById(id);
 
       if (!model) {
         throw new NotFoundError('Record not found!');
@@ -127,9 +129,7 @@ export class Repository<E extends IIdentifier> {
    */
   async findById(id: string): Promise<Document & E | null> {
     try {
-      let model = await this.databaseModel.findById(id);
-
-      return model;
+      return await this.databaseModel.findById(id);
     } catch (error) {
       throw error;
     }
@@ -144,8 +144,8 @@ export class Repository<E extends IIdentifier> {
    */
   async getOne(match = {}): Promise<E> {
     try {
-      let query = transformAggregationQuery(mergeWith({}, this.aggreagationQuery, <IAggregationQuery>{ $match: match }, this.mergeWithCustomizer), false);
-      let models = <E[]>(await this.databaseModel.aggregate(query));
+      const query = transformAggregationQuery(mergeWith({}, this.aggregationQuery, <IAggregationQuery>{ $match: match }, Repository.mergeWithCustomizer), false);
+      const models = <E[]>await this.databaseModel.aggregate(query);
 
       if (models.length === 0) {
         throw new NotFoundError('Record not found!');
@@ -166,8 +166,8 @@ export class Repository<E extends IIdentifier> {
    */
   async findOne(match = {}): Promise<E | null> {
     try {
-      let query = transformAggregationQuery(mergeWith({}, this.aggreagationQuery, <IAggregationQuery>{ $match: match }, this.mergeWithCustomizer), false);
-      let models = <E[]>(await this.databaseModel.aggregate(query));
+      const query = transformAggregationQuery(mergeWith({}, this.aggregationQuery, <IAggregationQuery>{ $match: match }, Repository.mergeWithCustomizer), false);
+      const models = <E[]>await this.databaseModel.aggregate(query);
 
       return models[0];
     } catch (error) {
@@ -184,10 +184,10 @@ export class Repository<E extends IIdentifier> {
    */
   async create(init: (model: Document & E) => void): Promise<Document & E> {
     try {
-      let model = new this.databaseModel();
+      const model = new this.databaseModel();
 
       init(model);
-      model = AuditInfo.beforeSave(model, this.userId, Operation.CREATE);
+      AuditInfo.beforeSave(model, this.userId, Operation.CREATE);
 
       await model.save();
       await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.CREATE, {}, this.transformObject(model));
@@ -207,11 +207,11 @@ export class Repository<E extends IIdentifier> {
    */
   async update(id: string, update: (model: Document & E) => void): Promise<Document & E> {
     try {
-      let model = await this.getById(id);
-      let dataBefore = this.transformObject(model);
+      const model = await this.getById(id);
+      const dataBefore = this.transformObject(model);
 
       update(model);
-      model = AuditInfo.beforeSave(model, this.userId, Operation.UPDATE);
+      AuditInfo.beforeSave(model, this.userId, Operation.UPDATE);
 
       await model.save();
       await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.UPDATE, dataBefore, this.transformObject(model));
@@ -231,17 +231,17 @@ export class Repository<E extends IIdentifier> {
    */
   async delete(id: string, validate?: (model: Document & E) => Promise<boolean>): Promise<void> {
     try {
-      let model = await this.getById(id);
+      const model = await this.getById(id);
 
       if (validate) {
-        let valid = await validate(model);
+        const valid = await validate(model);
         if (!valid) {
           throw new DatabaseError('Unable to soft delete record! Validation failed.');
         }
       }
 
-      let dataBefore = this.transformObject(model);
-      model = AuditInfo.beforeSave(model, this.userId, Operation.DELETE);
+      const dataBefore = this.transformObject(model);
+      AuditInfo.beforeSave(model, this.userId, Operation.DELETE);
 
       await model.save();
       await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.DELETE, dataBefore, this.transformObject(model));
@@ -260,16 +260,16 @@ export class Repository<E extends IIdentifier> {
    */
   async deleteHard(id: string, validate?: (model: Document & E) => Promise<boolean>): Promise<void> {
     try {
-      let model = await this.getById(id);
+      const model = await this.getById(id);
 
       if (validate) {
-        let valid = await validate(model);
+        const valid = await validate(model);
         if (!valid) {
           throw new DatabaseError('Unable to hard delete record! Validation failed.');
         }
       }
 
-      let dataBefore = this.transformObject(model);
+      const dataBefore = this.transformObject(model);
       await model.remove();
       await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.HARD_DELETE, dataBefore, {});
     } catch (error) {
@@ -287,14 +287,14 @@ export class Repository<E extends IIdentifier> {
    */
   async deleteHardByQuery(match = {}, validate?: (model: E) => Promise<boolean>): Promise<void> {
     try {
-      let model = await this.findOne(match);
+      const model = await this.findOne(match);
 
       if (!model) {
         throw new NotFoundError('Record not found');
       }
 
       if (validate) {
-        let valid = await validate(model);
+        const valid = await validate(model);
         if (!valid) {
           throw new DatabaseError('Unable to hard delete record! Validation failed.');
         }
@@ -318,9 +318,8 @@ export class Repository<E extends IIdentifier> {
    */
   async query(aggregationQuery?: IAggregationQuery): Promise<E[]> {
     try {
-      let query = transformAggregationQuery(mergeWith({}, this.aggreagationQuery, aggregationQuery, this.mergeWithCustomizer));
-      let models = <E[]>(await this.databaseModel.aggregate(query));
-      return models;
+      const query = transformAggregationQuery(mergeWith({}, this.aggregationQuery, aggregationQuery, Repository.mergeWithCustomizer));
+      return <E[]>await this.databaseModel.aggregate(query);
     } catch (error) {
       throw error;
     }
@@ -335,12 +334,12 @@ export class Repository<E extends IIdentifier> {
    */
   async count(match = {}): Promise<number> {
     try {
-      let query = transformAggregationQuery(mergeWith({}, this.aggreagationQuery, <IAggregationQuery>{ $match: match }, this.mergeWithCustomizer), false);
+      const query = transformAggregationQuery(mergeWith({}, this.aggregationQuery, <IAggregationQuery>{ $match: match }, Repository.mergeWithCustomizer), false);
       query.push({
         '$count': 'total_records'
       });
 
-      let total: any[] = <(Document & E)[]>(await this.databaseModel.aggregate(query));
+      const total: any[] = <(Document & E)[]>await this.databaseModel.aggregate(query);
 
       return total[0] ? total[0].total_records : 0;
     } catch (error) {
@@ -349,7 +348,7 @@ export class Repository<E extends IIdentifier> {
   }
 
   /**
-   * Get disctinct documents
+   * Get distinct documents.
    *
    * @param {string} [query='']
    * @returns {(Promise<(Document & E)[]>)}
@@ -357,11 +356,9 @@ export class Repository<E extends IIdentifier> {
    */
   async distinct(query = ''): Promise<(Document & E)[]> {
     try {
-      let q = this.databaseModel.distinct(query);
+      const q = this.databaseModel.distinct(query);
 
-      let distinct = await q;
-
-      return distinct;
+      return await q;
     } catch (error) {
       throw error;
     }
