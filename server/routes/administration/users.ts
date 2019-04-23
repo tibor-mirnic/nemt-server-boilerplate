@@ -1,10 +1,12 @@
 import { NextFunction } from 'express';
+import { Types } from 'mongoose';
 
 import { Router } from '../../core/express/router';
 import { Server } from '../../core/server';
 import { IRequest } from '../../core/models/express/request';
 import { IResponse } from '../../core/models/express/response';
 import { UserRepository } from '../../repositories/user';
+import { BadRequestError } from '../../core/error/user-friendly';
 
 export class UserRouter extends Router {
 
@@ -17,15 +19,16 @@ export class UserRouter extends Router {
       .get(this.server.passport.bearer.bind(this.server.passport), this.queryAll.bind(this));
 
     this.router.route('/:id')
-      .get(this.findById.bind(this));
+      .get(this.server.passport.bearer.bind(this.server.passport), this.findById.bind(this));
   }
 
   async queryAll(request: IRequest, response: IResponse, next: NextFunction) {
     try {
-      let ur = new UserRepository(this.server, this.getUserId(request));
+      const userId = this.getUserId(request);
+      const ur = new UserRepository(this.server, userId);
 
       response.data = await ur.query();
-      return next();
+      next();
     } catch (error) {
       next(Router.handleError(error, request, response));
     }
@@ -33,24 +36,18 @@ export class UserRouter extends Router {
 
   async findById(request: IRequest, response: IResponse, next: NextFunction) {
     try {
-      let ur = new UserRepository(this.server, this.getUserId(request));
-      let id = request.params.id;
+      const userId = this.getUserId(request);
+      const ur = new UserRepository(this.server, userId);
+      const id = request.params.id;
 
-      id.forEach((element: any) => {
-        console.log(element);
-      });
-
-      let user = await ur.findOne({
-        '_id': id
-      });
-
-      if (user) {
-        response.data = user;
-      } else {
-        response.data = {};
+      if (!id) {
+        throw new BadRequestError('A user ID is required.');
       }
 
-      return next();
+      response.data = await ur.getOne({
+        '_id': Types.ObjectId(id)
+      });
+      next();
     } catch (error) {
       next(Router.handleError(error, request, response));
     }
