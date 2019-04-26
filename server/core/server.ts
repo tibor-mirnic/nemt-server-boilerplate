@@ -48,7 +48,6 @@ export class Server {
   public environment: IEnvironment;
   public constants: IConstants;
 
-  public dbContext: DbContext;
   public factories: IFactories;
 
   public auditLogger: AuditLogRepository;
@@ -104,7 +103,7 @@ export class Server {
 
   async initDatabase() {
     try {
-      this.dbContext = await DbContext.connect(this.environment);
+      await DbContext.connect(this.environment);
       this.factories = FactoryBuilder.build(DbContext.getConnection());
     } catch (error) {
       throw error;
@@ -161,7 +160,7 @@ export class Server {
   }
 
   checkConnection() {
-    this.app.use(DbContext.checkConnection.bind(this.dbContext));
+    this.app.use(DbContext.checkConnection);
   }
 
   usePassport() {

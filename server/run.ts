@@ -1,6 +1,6 @@
 import { Server } from './core/server';
 
-let run = async () => {
+const run = async () => {
   try {
     await Server.bootstrap();
   } catch (error) {

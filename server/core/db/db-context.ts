@@ -31,6 +31,40 @@ export class DbContext extends EventEmitter {
     }
   }
 
+  static async connect(environment: IEnvironment, poolSize = 30): Promise<void> {
+    try {
+      const dbContext = await new Promise<DbContext | null>((resolve, reject) => {
+        const context = new DbContext(environment, poolSize);
+        context.on('connection-established', () => {
+          resolve(context);
+        });
+
+        context.on('connection-failed', error => {
+          reject(error);
+        });
+      });
+
+      if (!dbContext) {
+        throw new DatabaseError('Could not connect to the database!');
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static getConnection(): mongoose.Connection {
+    return dbConnection;
+  }
+
+  static checkConnection(request: IRequest, response: IResponse, next: NextFunction) {
+    if (!connectionEstablished) {
+      Logger.info('MONGO - Database connection could not be established!');
+      next(new DatabaseError('Could not connect to the database!'));
+    }
+
+    next();
+  }
+
   initConnection() {
     const me = this;
 
@@ -42,7 +76,7 @@ export class DbContext extends EventEmitter {
     dbConnection = mongoose.createConnection(this.mongoUri, {
       'user': this.environment.mongoDb.user,
       'pass': this.environment.mongoDb.password,
-      'useMongoClient': true,
+      'useNewUrlParser': true,
       'poolSize': this.poolSize
     });
 
@@ -73,29 +107,6 @@ export class DbContext extends EventEmitter {
     });
   }
 
-  static async connect(environment: IEnvironment, poolSize = 30): Promise<DbContext> {
-    try {
-      const dbContext = await new Promise<DbContext | null>((resolve, reject) => {
-        const context = new DbContext(environment, poolSize);
-        context.on('connection-established', () => {
-          resolve(context);
-        });
-
-        context.on('connection-failed', error => {
-          reject(error);
-        });
-      });
-
-      if (!dbContext) {
-        throw new DatabaseError('Could not connect to the database!');
-      }
-
-      return dbContext;
-    } catch (error) {
-      throw error;
-    }
-  }
-
   async disconnect(): Promise<void> {
     try {
       await new Promise<boolean>((resolve, reject) => {
@@ -112,18 +123,5 @@ export class DbContext extends EventEmitter {
     } catch (error) {
       throw error;
     }
-  }
-
-  static getConnection(): mongoose.Connection {
-    return dbConnection;
-  }
-
-  static checkConnection(request: IRequest, response: IResponse, next: NextFunction) {
-    if (!connectionEstablished) {
-      Logger.info('MONGO - Database connection could not be established!');
-      next(new DatabaseError('Could not connect to the database!'));
-    }
-
-    next();
   }
 }
