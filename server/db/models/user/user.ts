@@ -9,6 +9,7 @@ export interface IUser extends IIdentifier, ISoftDelete, IAuditInfo {
   firstName: string;
   lastName: string;
   passwordHash: string;
+  status: string;
 
   isSystem: boolean;
   isAdmin: boolean;

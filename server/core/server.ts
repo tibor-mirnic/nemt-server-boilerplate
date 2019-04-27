@@ -206,6 +206,7 @@ export class Server {
       system.isSystem = true;
       (<IUser>system).isDeleted = true;
       system.role = undefined;
+      system.status = 'active';
 
       await system.save();
     }
@@ -248,6 +249,7 @@ export class Server {
         user.firstName = this.environment.superAdmin.firstName;
         user.lastName = this.environment.superAdmin.lastName;
         user.passwordHash = Util.generateHash(this.environment.superAdmin.password);
+        user.status = 'active';
         user.isAdmin = true;
         user.role = superAdminRole._id.toString();
       });
@@ -257,6 +259,7 @@ export class Server {
         user.firstName = this.environment.superAdmin.firstName;
         user.lastName = this.environment.superAdmin.lastName;
         user.passwordHash = Util.generateHash(this.environment.superAdmin.password);
+        user.status = 'active';
       });
     }
   }

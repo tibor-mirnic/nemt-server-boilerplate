@@ -22,6 +22,10 @@ export const UserSchema: SchemaDefinition = {
     type: String,
     default: null
   },
+  status: {
+    type: String,
+    required: true
+  },
   isSystem: {
     type: Boolean,
     default: false
