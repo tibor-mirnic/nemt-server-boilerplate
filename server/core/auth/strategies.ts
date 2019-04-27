@@ -22,10 +22,8 @@ export class PassportStrategies {
   constructor(server: Server) {
     this.server = server;
 
-    this.strategiesRepository = new StrategiesRepository(this.server);
+    this.strategiesRepository = new StrategiesRepository(server);
     this.tokenRepository = new TokenRepository(server);
-
-    this.build();
   }
 
   build() {

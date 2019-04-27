@@ -7,6 +7,7 @@ import { IRequest } from '../../core/models/express/request';
 import { IResponse } from '../../core/models/express/response';
 import { UserRepository } from '../../repositories/user';
 import { BadRequestError } from '../../core/error/user-friendly';
+import { Passport } from '../../core/auth/passport';
 
 export class UserRouter extends Router {
 
@@ -16,10 +17,10 @@ export class UserRouter extends Router {
 
   initRoutes() {
     this.router.route('/')
-      .get(this.server.passport.bearer.bind(this.server.passport), this.queryAll.bind(this));
+      .get(Passport.bearer, this.queryAll.bind(this));
 
     this.router.route('/:id')
-      .get(this.server.passport.bearer.bind(this.server.passport), this.findById.bind(this));
+      .get(Passport.bearer, this.findById.bind(this));
   }
 
   async queryAll(request: IRequest, response: IResponse, next: NextFunction) {

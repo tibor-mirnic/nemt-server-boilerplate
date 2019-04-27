@@ -5,6 +5,7 @@ import { Server } from '../../core/server';
 import { IRequest } from '../../core/models/express/request';
 import { IResponse } from '../../core/models/express/response';
 import { TokenRepository } from '../../repositories/token';
+import { Passport } from '../../core/auth/passport';
 
 export class AuthRouter extends Router {
 
@@ -17,7 +18,7 @@ export class AuthRouter extends Router {
 
   initRoutes() {
     this.router.route('/login')
-      .post(this.server.passport.local, this.authenticate.bind(this));
+      .post(Passport.local, this.authenticate.bind(this));
   }
 
   async authenticate(request: IRequest, response: IResponse, next: NextFunction) {

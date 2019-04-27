@@ -17,7 +17,7 @@ import { IEnvironment } from './models/environment';
 import { Environment } from './environment';
 import { IConstants } from './models/constants';
 import { DbContext } from './db/db-context';
-import { Passport } from './auth/passport';
+import { PassportStrategies } from './auth/strategies';
 
 import { FactoryBuilder, IFactories } from '../db/factories';
 
@@ -52,8 +52,6 @@ export class Server {
 
   public auditLogger: AuditLogRepository;
 
-  public passport: Passport;
-
   public systemUserId: string;
 
   constructor() {
@@ -83,7 +81,7 @@ export class Server {
 
       server.checkConnection();
 
-      server.usePassport();
+      server.buildPassportStrategies();
       server.useRoutes();
 
       server.useHandlers();
@@ -163,8 +161,9 @@ export class Server {
     this.app.use(DbContext.checkConnection);
   }
 
-  usePassport() {
-    this.passport = new Passport(this);
+  buildPassportStrategies() {
+    const strategies = new PassportStrategies(this);
+    strategies.build();
   }
 
   useRoutes() {
