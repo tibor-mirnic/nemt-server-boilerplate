@@ -19,6 +19,9 @@ export class AuthRouter extends Router {
   initRoutes() {
     this.router.route('/login')
       .post(Passport.local, this.authenticate.bind(this));
+
+    this.router.route('/logout')
+      .post(Passport.bearer, this.invalidate.bind(this));
   }
 
   async authenticate(request: IRequest, response: IResponse, next: NextFunction) {
@@ -41,6 +44,22 @@ export class AuthRouter extends Router {
         'user': user,
         'accessToken': dbToken.token
       };
+      next();
+    } catch (error) {
+      next(Router.handleError(error, request, response));
+    }
+  }
+
+  async invalidate(request: IRequest, response: IResponse, next: NextFunction) {
+    try {
+      await this.tokenRepository.deleteHardByQuery({
+        'token': request.token
+      });
+
+      delete request.user;
+      delete request.token;
+
+      response.emptyResponse = true;
       next();
     } catch (error) {
       next(Router.handleError(error, request, response));
