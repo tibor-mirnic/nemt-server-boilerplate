@@ -73,6 +73,7 @@ export class DbContext extends EventEmitter {
     Logger.info(`APPLICATION: Environment: ${ this.environment.name }!`);
     Logger.info(`MONGO: Connection attempted with ${ this.environment.mongoDb.user }:${ this.environment.mongoDb.password }`);
 
+    mongoose.set('useCreateIndex', true);
     dbConnection = mongoose.createConnection(this.mongoUri, {
       'user': this.environment.mongoDb.user,
       'pass': this.environment.mongoDb.password,
