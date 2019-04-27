@@ -34,7 +34,6 @@ Windows environment:
 
 `npm run start-windows` or  `SET NODE_ENV=local&& ts-node run.ts`
 
-
 # Database #
 
 Before running the application you need to add a database user to the mongo instance.
@@ -49,7 +48,8 @@ db.createUser({
   roles: [{
     role: 'readWrite',
     db: 'database_name'
-  }]
+  }],
+  passwordDigestor: "server"
 });
 ```
 
