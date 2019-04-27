@@ -9,6 +9,7 @@ import { NotFoundError } from './error/not-found';
 import { IIdentifier } from './models/db/identifier';
 import { IAuditInfo, ISoftDelete } from './models/db/audit-info';
 import { AuditLogOperation, IAuditLogger } from './models/audit-log';
+import { Util } from './util/util';
 
 /**
  * Helper class for Mongoose
@@ -351,6 +352,27 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
       const q = this.databaseModel.distinct(query, this.aggregationQuery.$match);
 
       return await q;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Search models by property name using $regex.
+   *
+   * @param {string} query
+   * @param {string} [property = 'name']
+   * @returns {Promise<E[]>}
+   * @memberof Repository
+   */
+  async search(query: string, property = 'name'): Promise<E[]> {
+    try {
+      const q: any = {};
+      q[property] = {
+        '$regex': Util.escapeRegExp(query),
+        '$options': 'i'
+      };
+      return <E[]>await this.query({ $match: q });
     } catch (error) {
       throw error;
     }

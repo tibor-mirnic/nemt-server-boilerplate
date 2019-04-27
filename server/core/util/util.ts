@@ -95,4 +95,8 @@ export class Util {
     const userFriendlyName = timezoneId.replace(/_/gi, ' ');
     return `${ userFriendlyName } ${ tz(timezoneId).format('Z') }`;
   }
+
+  static escapeRegExp(str: string) {
+    return str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+  }
 }
