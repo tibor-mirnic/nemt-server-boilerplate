@@ -2,6 +2,7 @@ import { SchemaDefinition, SchemaTypes } from 'mongoose';
 
 import { tokenTypes } from '../../static/token';
 import { Util } from '../../../core/util/util';
+import { BaseSchemaDefinition } from '../../../core/db/base';
 
 export const TokenSchema: SchemaDefinition = {
   user: {
@@ -29,32 +30,5 @@ export const TokenSchema: SchemaDefinition = {
       return new Date(Date.now() + 20 * 60 * 1000);
     }
   },
-  isDeleted: {
-    type: Boolean,
-    default: false
-  },
-  deletedAt: {
-    type: Date,
-    default: null
-  },
-  deletedBy: {
-    type: String,
-    default: null
-  },
-  createdAt: {
-    type: Date,
-    default: null
-  },
-  createdBy: {
-    type: String,
-    default: null
-  },
-  updatedAt: {
-    type: Date,
-    default: null
-  },
-  updatedBy: {
-    type: String,
-    default: null
-  }
+  ...BaseSchemaDefinition
 };
