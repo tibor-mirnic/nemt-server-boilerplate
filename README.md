@@ -49,7 +49,7 @@ db.createUser({
     role: 'readWrite',
     db: 'database_name'
   }],
-  passwordDigestor: "server"
+  passwordDigestor: 'server'
 });
 ```
 
