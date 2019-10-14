@@ -36,18 +36,18 @@ Windows environment:
 
 # Database #
 
-Before running the application you need to add a database user to the mongo instance.
+Before running the application locally for the first time, you need to create new database and to add a database user to the mongo instance.
 
-You can find the database user credentials in the `config/enviornments/your_environment`.
+For the local environment, you can find the database user credentials in the `config/enviornments/local.ts`. Execute this piece of code in mongo shell to create create new database and to add a database user. 
 
 ```
-use 'database_name';
+use boilerplate_local
 db.createUser({
-  user: 'user',
-  pwd: 'password',
+  user: 'local',
+  pwd: 'local',
   roles: [{
     role: 'readWrite',
-    db: 'database_name'
+    db: 'boilerplate_local'
   }],
   passwordDigestor: 'server'
 });
