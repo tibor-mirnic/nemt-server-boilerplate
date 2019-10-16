@@ -1,6 +1,6 @@
 import * as passport from 'passport';
 import { Strategy as Local } from 'passport-local';
-import { IVerifyOptions, Strategy as Bearer } from 'passport-http-bearer';
+import { Strategy as Bearer } from 'passport-http-bearer';
 
 import { Server } from '../server';
 import { IRequest } from '../models/express/request';
@@ -8,20 +8,15 @@ import { AuthenticationError } from '../error/auth';
 import { ForbiddenError } from '../error/forbidden';
 import { Util } from '../util/util';
 import { GoogleUtil } from '../util/google';
-
 import { StrategiesRepository } from '../../repositories/strategies';
 import { IUser } from '../../db/models/user/user';
-
 import { TokenRepository } from '../../repositories/token';
 
 export class PassportStrategies {
-  server: Server;
   strategiesRepository: StrategiesRepository;
   tokenRepository: TokenRepository;
 
-  constructor(server: Server) {
-    this.server = server;
-
+  constructor(private server: Server) {
     this.strategiesRepository = new StrategiesRepository(server);
     this.tokenRepository = new TokenRepository(server);
   }
@@ -37,12 +32,7 @@ export class PassportStrategies {
     ));
   }
 
-  async local(
-    request: IRequest,
-    email: string,
-    password: string,
-    done: (err: any, user?: IUser) => void
-  ) {
+  async local(request: IRequest, email: string, password: string, done: (err: any, user?: IUser) => void) {
     try {
       if (!email || !password) {
         throw new AuthenticationError('Missing email or password fields!');
@@ -73,10 +63,7 @@ export class PassportStrategies {
     }
   }
 
-  async bearer(
-    token: string,
-    done: (err: any, user?: IUser, options?: IVerifyOptions | string) => void
-  ) {
+  async bearer(token: string, done: (err: any, user?: IUser, token?: string) => void) {
     try {
       const errorObj = new ForbiddenError('Unauthorized!');
 

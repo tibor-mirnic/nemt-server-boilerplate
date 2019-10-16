@@ -21,21 +21,17 @@ export class StrategiesRepository extends Repository<IUser> {
           'status': 'active'
         },
         $unwind: ['$role'],
-        $group: {
-          _id: '$_id',
-          'role': { '$first': '$role' },
-          'status': { '$first': '$status' },
-          'email': { '$first': '$email' },
-          'passwordHash': { '$first': '$passwordHash' },
-          'firstName': { '$first': '$firstName' },
-          'lastName': { '$first': '$lastName' },
-          'isAdmin': { '$first': '$isAdmin' }
-        },
         $project: {
+          'isAdmin': 1,
           'email': 1,
           'passwordHash': 1,
           'firstName': 1,
           'lastName': 1,
+          'role': {
+            'type': 1,
+            'description': 1,
+            'permissions': 1
+          }
         }
       },
       auditLogger: server.auditLogger

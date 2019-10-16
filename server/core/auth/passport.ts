@@ -1,5 +1,4 @@
 import * as passport from 'passport';
-import { IVerifyOptions } from 'passport-http-bearer';
 import { NextFunction } from 'express';
 
 import { IRequest } from '../models/express/request';
@@ -11,7 +10,7 @@ export class Passport {
 
   static local(request: IRequest, response: IResponse, next: NextFunction) {
     passport.authenticate('local', { session: false },
-      (error: any, user: IUser) => {
+      (error: any, user?: IUser) => {
         if (error) {
           next(error);
         }
@@ -24,7 +23,7 @@ export class Passport {
 
   static bearer(request: IRequest, response: IResponse, next: NextFunction) {
     passport.authenticate('bearer', { session: false },
-      (error: any, user: IUser, options?: IVerifyOptions | string) => {
+      (error: any, user: IUser, token?: string) => {
         if (error) {
           next(error);
         }
@@ -34,11 +33,7 @@ export class Passport {
         }
 
         request.user = user;
-
-        if (options && typeof options === 'string') {
-          request.token = options;
-        }
-
+        request.token = token;
         next();
       }
     )(request, response, next);
