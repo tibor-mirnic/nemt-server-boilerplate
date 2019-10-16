@@ -21,7 +21,16 @@ export class UserRepository extends Repository<IUser> {
         },
         $unwind: ['$role'],
         $project: {
-          'passwordHash': 0
+          'isAdmin': 1,
+          'email': 1,
+          'firstName': 1,
+          'lastName': 1,
+          'status': 1,
+          'role': {
+            'type': 1,
+            'description': 1,
+            'permissions': 1
+          }
         }
       },
       auditLogger: server.auditLogger

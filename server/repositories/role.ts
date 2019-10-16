@@ -11,6 +11,11 @@ export class RoleRepository extends Repository<IRole> {
       aggregationQuery: {
         $match: {
           'isDeleted': false
+        },
+        $project: {
+          'type': 1,
+          'description': 1,
+          'permissions': 1
         }
       },
       auditLogger: server.auditLogger

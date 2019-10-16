@@ -21,8 +21,7 @@ import { Util } from './util/util';
 export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
   public auditLogger: IAuditLogger;
 
-  private factory: Factory<E>;
-
+  private readonly factory: Factory<E>;
   private readonly userId: string;
   private readonly aggregationQuery: IAggregationQuery;
 
@@ -31,7 +30,7 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
     this.userId = config.userId;
     this.aggregationQuery = merge(<IAggregationQuery>{
       $project: {
-        '__v': 0
+        '__v': '$$REMOVE'
       }
     }, config.aggregationQuery);
 
@@ -329,10 +328,10 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
     try {
       const query = transformAggregationQuery(mergeWith({}, this.aggregationQuery, <IAggregationQuery>{ $match: match }, Repository.mergeWithCustomizer), false);
       query.push({
-        '$count': 'total_records'
+        $count: 'totalRecords'
       });
 
-      const total: any[] = <(Document & E)[]>await this.databaseModel.aggregate(query);
+      const total: any[] = <(Document & E & { totalRecords: number })[]>await this.databaseModel.aggregate(query);
 
       return total[0] ? total[0].total_records : 0;
     } catch (error) {
@@ -369,8 +368,8 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
     try {
       const q: any = {};
       q[property] = {
-        '$regex': Util.escapeRegExp(query),
-        '$options': 'i'
+        $regex: Util.escapeRegExp(query),
+        $options: 'i'
       };
       return <E[]>await this.query({ $match: q });
     } catch (error) {

@@ -8,7 +8,14 @@ export class TokenRepository extends Repository<IToken> {
     super({
       factory: server.factories.token,
       userId: server.systemUserId,
-      aggregationQuery: {},
+      aggregationQuery: {
+        $project: {
+          'user': 1,
+          'metadata': 1,
+          'type': 1,
+          'token': 1
+        }
+      },
       auditLogger: server.auditLogger
     });
   }
