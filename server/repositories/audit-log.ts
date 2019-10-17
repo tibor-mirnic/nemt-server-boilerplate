@@ -17,22 +17,18 @@ export class AuditLogRepository implements IAuditLogger {
   }
 
   public async log(collectionName: string, entityId: string, userId: string, operation: AuditLogOperation, dataBefore: any, dataAfter: any): Promise<void> {
-    try {
-      const model = new this.databaseModel();
+    const model = new this.databaseModel();
 
-      model.collectionName = collectionName;
-      model.entityId = entityId;
-      model.userId = userId;
-      model.operation = operation;
+    model.collectionName = collectionName;
+    model.entityId = entityId;
+    model.userId = userId;
+    model.operation = operation;
 
-      model.dataBefore = JSON.stringify(dataBefore);
-      model.dataAfter = JSON.stringify(dataAfter);
+    model.dataBefore = JSON.stringify(dataBefore);
+    model.dataAfter = JSON.stringify(dataAfter);
 
-      model.createdAt = new Date();
+    model.createdAt = new Date();
 
-      await model.save();
-    } catch (error) {
-      throw error;
-    }
+    await model.save();
   }
 }

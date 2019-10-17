@@ -63,49 +63,41 @@ export class Server {
 
   // run the server
   static async bootstrap() {
-    try {
-      const server = new Server();
+    const server = new Server();
 
-      await server.initDatabase();
+    await server.initDatabase();
 
-      server.app = express();
+    server.app = express();
 
-      await server.createSystemUser();
-      server.initAuditLogger();
+    await server.createSystemUser();
+    server.initAuditLogger();
 
-      // build middleware
-      server.useHeaders();
-      server.useBodyParser();
-      server.useBusboy();
-      server.useMorgan();
+    // build middleware
+    server.useHeaders();
+    server.useBodyParser();
+    server.useBusboy();
+    server.useMorgan();
 
-      server.checkConnection();
+    server.checkConnection();
 
-      server.buildPassportStrategies();
-      server.useRoutes();
+    server.buildPassportStrategies();
+    server.useRoutes();
 
-      server.useHandlers();
+    server.useHandlers();
 
-      // setup database users and permissions
-      const superAdminRole = await server.upsertSuperAdminRole();
-      await server.upsertSuperAdminUser(superAdminRole);
+    // setup database users and permissions
+    const superAdminRole = await server.upsertSuperAdminRole();
+    await server.upsertSuperAdminUser(superAdminRole);
 
-      // start server
-      server.startServer();
+    // start server
+    server.startServer();
 
-      return server;
-    } catch (error) {
-      throw error;
-    }
+    return server;
   }
 
   async initDatabase() {
-    try {
-      await DbContext.connect(this.environment);
-      this.factories = FactoryBuilder.build(DbContext.getConnection());
-    } catch (error) {
-      throw error;
-    }
+    await DbContext.connect(this.environment);
+    this.factories = FactoryBuilder.build(DbContext.getConnection());
   }
 
   initFolderPaths() {

@@ -99,17 +99,13 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
    * @memberof Repository
    */
   async getById(id: string): Promise<Document & E> {
-    try {
-      const model = await this.databaseModel.findById(id);
+    const model = await this.databaseModel.findById(id);
 
-      if (!model) {
-        throw new NotFoundError('Record not found!');
-      }
-
-      return model;
-    } catch (error) {
-      throw error;
+    if (!model) {
+      throw new NotFoundError('Record not found!');
     }
+
+    return model;
   }
 
   /**
@@ -120,11 +116,7 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
    * @memberof Repository
    */
   async findById(id: string): Promise<Document & E | null> {
-    try {
-      return await this.databaseModel.findById(id);
-    } catch (error) {
-      throw error;
-    }
+    return await this.databaseModel.findById(id);
   }
 
   /**
@@ -135,18 +127,14 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
    * @memberof Repository
    */
   async getOne(match = {}): Promise<E> {
-    try {
-      const query = transformAggregationQuery(mergeWith({}, this.aggregationQuery, <IAggregationQuery>{ $match: match }, Repository.mergeWithCustomizer), false);
-      const models = <E[]>await this.databaseModel.aggregate(query);
+    const query = transformAggregationQuery(mergeWith({}, this.aggregationQuery, <IAggregationQuery>{ $match: match }, Repository.mergeWithCustomizer), false);
+    const models = <E[]>await this.databaseModel.aggregate(query);
 
-      if (models.length === 0) {
-        throw new NotFoundError('Record not found!');
-      }
-
-      return models[0];
-    } catch (error) {
-      throw error;
+    if (models.length === 0) {
+      throw new NotFoundError('Record not found!');
     }
+
+    return models[0];
   }
 
   /**
@@ -157,14 +145,10 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
    * @memberof Repository
    */
   async findOne(match = {}): Promise<E | null> {
-    try {
-      const query = transformAggregationQuery(mergeWith({}, this.aggregationQuery, <IAggregationQuery>{ $match: match }, Repository.mergeWithCustomizer), false);
-      const models = <E[]>await this.databaseModel.aggregate(query);
+    const query = transformAggregationQuery(mergeWith({}, this.aggregationQuery, <IAggregationQuery>{ $match: match }, Repository.mergeWithCustomizer), false);
+    const models = <E[]>await this.databaseModel.aggregate(query);
 
-      return models[0];
-    } catch (error) {
-      throw error;
-    }
+    return models[0];
   }
 
   /**
@@ -175,18 +159,14 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
    * @memberof Repository
    */
   async create(init: (model: Document & E) => void): Promise<Document & E> {
-    try {
-      const model = new this.databaseModel();
+    const model = new this.databaseModel();
 
-      init(model);
-      AuditInfo.beforeCreate(model, this.userId);
+    init(model);
+    AuditInfo.beforeCreate(model, this.userId);
 
-      await model.save();
-      await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.CREATE, {}, this.transformObject(model));
-      return model;
-    } catch (error) {
-      throw error;
-    }
+    await model.save();
+    await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.CREATE, {}, this.transformObject(model));
+    return model;
   }
 
   /**
@@ -198,19 +178,15 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
    * @memberof Repository
    */
   async update(id: string, update: (model: Document & E) => void): Promise<Document & E> {
-    try {
-      const model = await this.getById(id);
-      const dataBefore = this.transformObject(model);
+    const model = await this.getById(id);
+    const dataBefore = this.transformObject(model);
 
-      update(model);
-      AuditInfo.beforeUpdate(model, this.userId);
+    update(model);
+    AuditInfo.beforeUpdate(model, this.userId);
 
-      await model.save();
-      await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.UPDATE, dataBefore, this.transformObject(model));
-      return model;
-    } catch (error) {
-      throw error;
-    }
+    await model.save();
+    await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.UPDATE, dataBefore, this.transformObject(model));
+    return model;
   }
 
   /**
@@ -222,24 +198,20 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
    * @memberof Repository
    */
   async delete(id: string, validate?: (model: Document & E) => Promise<boolean>): Promise<void> {
-    try {
-      const model = await this.getById(id);
+    const model = await this.getById(id);
 
-      if (validate) {
-        const valid = await validate(model);
-        if (!valid) {
-          throw new DatabaseError('Unable to soft delete record! Validation failed.');
-        }
+    if (validate) {
+      const valid = await validate(model);
+      if (!valid) {
+        throw new DatabaseError('Unable to soft delete record! Validation failed.');
       }
-
-      const dataBefore = this.transformObject(model);
-      AuditInfo.beforeDelete(model, this.userId);
-
-      await model.save();
-      await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.DELETE, dataBefore, this.transformObject(model));
-    } catch (error) {
-      throw error;
     }
+
+    const dataBefore = this.transformObject(model);
+    AuditInfo.beforeDelete(model, this.userId);
+
+    await model.save();
+    await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.DELETE, dataBefore, this.transformObject(model));
   }
 
   /**
@@ -251,22 +223,18 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
    * @memberof Repository
    */
   async deleteHard(id: string, validate?: (model: Document & E) => Promise<boolean>): Promise<void> {
-    try {
-      const model = await this.getById(id);
+    const model = await this.getById(id);
 
-      if (validate) {
-        const valid = await validate(model);
-        if (!valid) {
-          throw new DatabaseError('Unable to hard delete record! Validation failed.');
-        }
+    if (validate) {
+      const valid = await validate(model);
+      if (!valid) {
+        throw new DatabaseError('Unable to hard delete record! Validation failed.');
       }
-
-      const dataBefore = this.transformObject(model);
-      await model.remove();
-      await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.HARD_DELETE, dataBefore, {});
-    } catch (error) {
-      throw error;
     }
+
+    const dataBefore = this.transformObject(model);
+    await model.remove();
+    await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.HARD_DELETE, dataBefore, {});
   }
 
   /**
@@ -278,27 +246,23 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
    * @memberof Repository
    */
   async deleteHardByQuery(match = {}, validate?: (model: E) => Promise<boolean>): Promise<void> {
-    try {
-      const model = await this.findOne(match);
+    const model = await this.findOne(match);
 
-      if (!model) {
-        throw new NotFoundError('Record not found');
-      }
-
-      if (validate) {
-        const valid = await validate(model);
-        if (!valid) {
-          throw new DatabaseError('Unable to hard delete record! Validation failed.');
-        }
-      }
-
-      await this.databaseModel.findOneAndRemove({
-        '_id': model._id
-      });
-      await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.HARD_DELETE, model, {});
-    } catch (error) {
-      throw error;
+    if (!model) {
+      throw new NotFoundError('Record not found');
     }
+
+    if (validate) {
+      const valid = await validate(model);
+      if (!valid) {
+        throw new DatabaseError('Unable to hard delete record! Validation failed.');
+      }
+    }
+
+    await this.databaseModel.findOneAndRemove({
+      '_id': model._id
+    });
+    await this.auditLogger.log(this.factory.name, model._id.toString(), this.userId, AuditLogOperation.HARD_DELETE, model, {});
   }
 
   /**
@@ -309,12 +273,8 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
    * @memberof Repository
    */
   async query(aggregationQuery?: IAggregationQuery): Promise<E[]> {
-    try {
-      const query = transformAggregationQuery(mergeWith({}, this.aggregationQuery, aggregationQuery, Repository.mergeWithCustomizer));
-      return <E[]>await this.databaseModel.aggregate(query);
-    } catch (error) {
-      throw error;
-    }
+    const query = transformAggregationQuery(mergeWith({}, this.aggregationQuery, aggregationQuery, Repository.mergeWithCustomizer));
+    return <E[]>await this.databaseModel.aggregate(query);
   }
 
   /**
@@ -325,18 +285,14 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
    * @memberof Repository
    */
   async count(match = {}): Promise<number> {
-    try {
-      const query = transformAggregationQuery(mergeWith({}, this.aggregationQuery, <IAggregationQuery>{ $match: match }, Repository.mergeWithCustomizer), false);
-      query.push({
-        $count: 'totalRecords'
-      });
+    const query = transformAggregationQuery(mergeWith({}, this.aggregationQuery, <IAggregationQuery>{ $match: match }, Repository.mergeWithCustomizer), false);
+    query.push({
+      $count: 'totalRecords'
+    });
 
-      const total: any[] = <(Document & E & { totalRecords: number })[]>await this.databaseModel.aggregate(query);
+    const total: any[] = <(Document & E & { totalRecords: number })[]>await this.databaseModel.aggregate(query);
 
-      return total[0] ? total[0].total_records : 0;
-    } catch (error) {
-      throw error;
-    }
+    return total[0] ? total[0].total_records : 0;
   }
 
   /**
@@ -347,13 +303,9 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
    * @memberof Repository
    */
   async distinct(query = ''): Promise<(Document & E)[]> {
-    try {
-      const q = this.databaseModel.distinct(query, this.aggregationQuery.$match);
+    const q = this.databaseModel.distinct(query, this.aggregationQuery.$match);
 
-      return await q;
-    } catch (error) {
-      throw error;
-    }
+    return await q;
   }
 
   /**
@@ -365,15 +317,11 @@ export class Repository<E extends IIdentifier & ISoftDelete & IAuditInfo> {
    * @memberof Repository
    */
   async search(query: string, property = 'name'): Promise<E[]> {
-    try {
-      const q: any = {};
-      q[property] = {
-        $regex: Util.escapeRegExp(query),
-        $options: 'i'
-      };
-      return <E[]>await this.query({ $match: q });
-    } catch (error) {
-      throw error;
-    }
+    const q: any = {};
+    q[property] = {
+      $regex: Util.escapeRegExp(query),
+      $options: 'i'
+    };
+    return <E[]>await this.query({ $match: q });
   }
 }

@@ -32,23 +32,19 @@ export class DbContext extends EventEmitter {
   }
 
   static async connect(environment: IEnvironment, poolSize = 30): Promise<void> {
-    try {
-      const dbContext = await new Promise<DbContext | null>((resolve, reject) => {
-        const context = new DbContext(environment, poolSize);
-        context.on('connection-established', () => {
-          resolve(context);
-        });
-
-        context.on('connection-failed', error => {
-          reject(error);
-        });
+    const dbContext = await new Promise<DbContext | null>((resolve, reject) => {
+      const context = new DbContext(environment, poolSize);
+      context.on('connection-established', () => {
+        resolve(context);
       });
 
-      if (!dbContext) {
-        throw new DatabaseError('Could not connect to the database!');
-      }
-    } catch (error) {
-      throw error;
+      context.on('connection-failed', error => {
+        reject(error);
+      });
+    });
+
+    if (!dbContext) {
+      throw new DatabaseError('Could not connect to the database!');
     }
   }
 
@@ -109,20 +105,16 @@ export class DbContext extends EventEmitter {
   }
 
   async disconnect(): Promise<void> {
-    try {
-      await new Promise<boolean>((resolve, reject) => {
-        if (connectionEstablished && dbConnection) {
-          dbConnection.close();
+    await new Promise<boolean>((resolve, reject) => {
+      if (connectionEstablished && dbConnection) {
+        dbConnection.close();
 
-          this.on('connection-disconnected', () => {
-            resolve(true);
-          });
-        } else {
-          throw new DatabaseError('Connection was not estabilshed!');
-        }
-      });
-    } catch (error) {
-      throw error;
-    }
+        this.on('connection-disconnected', () => {
+          resolve(true);
+        });
+      } else {
+        throw new DatabaseError('Connection was not estabilshed!');
+      }
+    });
   }
 }
