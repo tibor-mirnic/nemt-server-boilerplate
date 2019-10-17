@@ -85,7 +85,7 @@ export class PassportStrategies {
       }
 
       const dbUser = await this.strategiesRepository.findOne({
-        '_id': dbToken.user.toString(),
+        '_id': dbToken.user,
         'status': 'active'
       });
 

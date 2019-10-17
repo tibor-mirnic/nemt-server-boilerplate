@@ -6,7 +6,9 @@ import { BaseSchemaDefinition } from '../../../core/db/base';
 
 export const TokenSchema: SchemaDefinition = {
   user: {
-    type: String
+    ref: 'User',
+    type: SchemaTypes.ObjectId,
+    default: null
   },
   data: {
     type: SchemaTypes.Mixed,

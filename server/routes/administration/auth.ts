@@ -33,7 +33,7 @@ export class AuthRouter extends Router {
       }
 
       const dbToken = await this.tokenRepository.create(token => {
-        token.user = user._id.toString();
+        token.user = <any>user._id;
         token.type = 'admin';
         token.expireAt = new Date(Date.now() + 5 * 24 * 3600 * 1000);
       });
