@@ -1,5 +1,6 @@
 import { join } from 'path';
-import { IEnvironment } from './../../core/models/environment';
+
+import { IEnvironment } from '../../core/models/environment';
 
 export const local: IEnvironment = {
   name: 'local',

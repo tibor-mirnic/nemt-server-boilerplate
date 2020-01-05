@@ -1,138 +1,120 @@
 import * as mongoose from 'mongoose';
 import { NextFunction } from 'express';
-
-import { IEnvironment } from './../models/environment';
-import { DatabaseError } from './../error/server';
-import { IRequest } from './../models/express/request';
-import { IResponse } from './../models/express/response';
-import { Logger } from './../logger';
 import { EventEmitter } from 'events';
+
+import { IEnvironment } from '../models/environment';
+import { DatabaseError } from '../error/server';
+import { IRequest } from '../models/express/request';
+import { IResponse } from '../models/express/response';
+import { Logger } from '../logger';
 
 let dbConnection: mongoose.Connection;
 let connectionEstablished = false;
 
 export class DbContext extends EventEmitter {
   public mongoUri: string;
-  
+
   public environment: IEnvironment;
-  public logger: Logger;
 
   public poolSize: number;
 
-  constructor(environment: IEnvironment, logger: Logger, poolSize = 30) {
+  constructor(environment: IEnvironment, poolSize = 30) {
     super();
 
     (<any>mongoose.Promise) = global.Promise;
 
     this.environment = environment;
-    this.logger = logger;
     this.poolSize = poolSize;
 
-    if(!dbConnection) {
+    if (!dbConnection) {
       this.initConnection();
     }
   }
 
+  static async connect(environment: IEnvironment, poolSize = 30): Promise<void> {
+    const dbContext = await new Promise<DbContext | null>((resolve, reject) => {
+      const context = new DbContext(environment, poolSize);
+      context.on('connection-established', () => {
+        resolve(context);
+      });
+
+      context.on('connection-failed', error => {
+        reject(error);
+      });
+    });
+
+    if (!dbContext) {
+      throw new DatabaseError('Could not connect to the database!');
+    }
+  }
+
+  static getConnection(): mongoose.Connection {
+    return dbConnection;
+  }
+
+  static checkConnection(request: IRequest, response: IResponse, next: NextFunction) {
+    if (!connectionEstablished) {
+      Logger.info('MONGO - Database connection could not be established!');
+      next(new DatabaseError('Could not connect to the database!'));
+    }
+
+    next();
+  }
+
   initConnection() {
-    let me = this;
+    const me = this;
 
-    this.mongoUri = `mongodb://${this.environment.mongoDb.url}/${this.environment.mongoDb.databaseName}`;
+    this.mongoUri = `mongodb://${ this.environment.mongoDb.url }/${ this.environment.mongoDb.databaseName }`;
 
-    this.logger.info(`APPLICATION: Environment: ${this.environment.name}!`);
-    this.logger.info(`MONGO: Connection attempted with ${this.environment.mongoDb.user}:${this.environment.mongoDb.password}`);
-    
+    Logger.info(`APPLICATION: Environment: ${ this.environment.name }!`);
+    Logger.info(`MONGO: Connection attempted with ${ this.environment.mongoDb.user }:${ this.environment.mongoDb.password }`);
+
+    mongoose.set('useCreateIndex', true);
     dbConnection = mongoose.createConnection(this.mongoUri, {
       'user': this.environment.mongoDb.user,
       'pass': this.environment.mongoDb.password,
-      'useMongoClient': true,      
+      'useNewUrlParser': true,
       'poolSize': this.poolSize
     });
 
-    dbConnection.on('connected', function() {      
-      me.logger.info('MONGO: Mongoose connected!');
+    dbConnection.on('connected', function () {
+      Logger.info('MONGO: Mongoose connected!');
       connectionEstablished = true;
       me.emit('connection-established');
     });
 
-    dbConnection.on('disconnected', function(error) {
-      me.logger.info('MONGO: Mongoose disconnected!');
+    dbConnection.on('disconnected', function (error) {
+      Logger.info('MONGO: Mongoose disconnected!');
       connectionEstablished = false;
-      me.emit('connection-disconnected', error); 
+      me.emit('connection-disconnected', error);
     });
 
-    dbConnection.on('error', function(error) {
-      me.logger.info('MONGO: Mongoose disconnected!');
+    dbConnection.on('error', function (error) {
+      Logger.info('MONGO: Mongoose disconnected!');
       connectionEstablished = false;
-      me.emit('connection-failed', error); 
+      me.emit('connection-failed', error);
     });
 
-    process.on('SIGINT', function() {
-      console.log("SIGINT triggered");
+    process.on('SIGINT', function () {
+      console.log('SIGINT triggered');
       dbConnection.close();
-      setTimeout(function() {
+      setTimeout(function () {
         process.exit();
-      }, 1000); 
-    });        
-  }
-
-  static async connect(environment: IEnvironment, logger: Logger, poolSize = 30): Promise<DbContext> {
-    try {
-      let dbContext = await new Promise<DbContext | null>((resolve, reject) => {
-        let context = new DbContext(environment, logger, poolSize);
-        context.on('connection-established', () => {
-          resolve(context);
-        });        
-
-        context.on('connection-failed', (error) => {
-          reject(error);
-        });
-      });
-
-      if(!dbContext) {
-        throw new DatabaseError('Could not connect to the database!');
-      }
-
-      return dbContext;
-    }
-    catch(error) {
-      throw error;
-    }
+      }, 1000);
+    });
   }
 
   async disconnect(): Promise<void> {
-    try {
-      await new Promise<boolean>((resolve, reject) => {        
-        if(connectionEstablished && dbConnection) {
-          dbConnection.close();
+    await new Promise<boolean>((resolve, reject) => {
+      if (connectionEstablished && dbConnection) {
+        dbConnection.close();
 
-          this.on('connection-disconnected', () => {
-            resolve(true);
-          });
-        }
-        else {
-          throw new DatabaseError('Connection was not estabilshed!');
-        }
-      });
-    }
-    catch(error) {
-      throw error;
-    }
-  }
-
-  isConnected(): boolean {
-    return connectionEstablished;
-  }
-
-  getConnection(): mongoose.Connection {
-    return dbConnection;
-  }
-
-  checkConnection(request: IRequest, response: IResponse, next: NextFunction) {
-    if(!connectionEstablished) {
-      this.logger.info('MONGO - Database connection could not be established!');
-      return next(new DatabaseError('Could not connect to the database!'));
-    }
-
-    return next();
+        this.on('connection-disconnected', () => {
+          resolve(true);
+        });
+      } else {
+        throw new DatabaseError('Connection was not estabilshed!');
+      }
+    });
   }
 }

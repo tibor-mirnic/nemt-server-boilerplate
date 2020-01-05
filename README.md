@@ -6,8 +6,6 @@ Application has multiple environments:
 
 * `local` - Default
 
-* `test`
-
 * `development`
 
 # Visual Studio Code #
@@ -21,12 +19,6 @@ To run application using `debugger` you need this configuration:
     "request": "launch",
     "name": "Debug server",
     "program": "${workspaceRoot}/server/run",
-    "cwd": "${workspaceRoot}/server"
-  }, {
-    "type": "node",
-    "request": "launch",
-    "name": "Unit tests",
-    "program": "${workspaceRoot}/server/tests/unit/run",
     "cwd": "${workspaceRoot}/server"
   }
 ]
@@ -42,22 +34,22 @@ Windows environment:
 
 `npm run start-windows` or  `SET NODE_ENV=local&& ts-node run.ts`
 
-
 # Database #
 
-Before running the application you need to add a database user to the mongo instance.
+Before running the application locally for the first time, you need to create new database and to add a database user to the mongo instance.
 
-You can find the database user credentials in the `config/enviornments/your_environment`.
+For the local environment, you can find the database user credentials in the `config/enviornments/local.ts`. Execute this piece of code in mongo shell to create create new database and to add a database user. 
 
 ```
-use 'database_name';
+use boilerplate_local
 db.createUser({
-  user: 'user',
-  pwd: 'password',
+  user: 'local',
+  pwd: 'local',
   roles: [{
     role: 'readWrite',
-    db: 'database_name'
-  }]
+    db: 'boilerplate_local'
+  }],
+  passwordDigestor: 'server'
 });
 ```
 
@@ -104,7 +96,5 @@ db.createUser({
   ├── <b>repositories</b> - Mongoose model wrappers
   ├── <b>routes</b> - Express routes
     └── <b>module.ts</b> - Group express routes under same url
-  └── <b>test</b>
-    ├── <b>unit</b> - Unit tests
     ...
 </pre>

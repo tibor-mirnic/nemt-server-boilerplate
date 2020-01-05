@@ -1,12 +1,9 @@
 import { Server } from './core/server';
 
-let run = async () => {
+(async () => {
   try {
     await Server.bootstrap();
-  }
-  catch(error) {
+  } catch (error) {
     console.log(error);
   }
-};
-
-run();
+})();

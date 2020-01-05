@@ -1,39 +1,27 @@
-import * as request from 'request';
+import * as request from 'request-promise-native';
 
-import { GoogleAuthenticationError } from './../error/auth';
+import { GoogleAuthenticationError } from '../error/auth';
 
 export class GoogleUtil {
-  /**
-   * Validates Google account token
-   * 
-   * @static
-   * @param {string} id_token 
-   * @returns {GoogleSuccessBody}
-   * 
-   * @memberof GoogleUtil
-   */
-  static validateToken(id_token: string, client_id: string, authUrl: string) {
-    let requestOptions = {
-      url: authUrl,
-      method: "GET",
-      json: true,
-      qs: {
-        id_token: id_token
-      }
-    }
 
-    return new Promise((resolve, reject) => {
-      request(requestOptions, (error: any, response: any, body: any) => {
-        if(error) {
-          reject(new GoogleAuthenticationError((error || '').toString()));
+  static async validateToken(authUrl: string, tokenId: string, clientId: string) {
+    try {
+      const result = await request({
+        url: authUrl,
+        method: 'GET',
+        json: true,
+        qs: {
+          id_token: tokenId
         }
-
-        if(!body.aud || !body.aud.includes(client_id)) {
-          reject(new GoogleAuthenticationError('Access credentials are incorrect!'));
-        }
-
-        resolve(body);
       });
-    });
+
+      if (!result.aud || !result.aud.includes(clientId)) {
+        throw new GoogleAuthenticationError('Access credentials are incorrect!');
+      }
+
+      return result;
+    } catch (error) {
+      throw new GoogleAuthenticationError((error || '').toString());
+    }
   }
 }

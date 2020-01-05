@@ -29,7 +29,7 @@ export interface IGoogleConfiguration {
 
 export interface IEnvironment {
   name: string;
-  
+
   superAdmin: ISuperAdmin;
   https: IHttps;
   mongoDb: IMongoDb;

@@ -2,12 +2,12 @@ import { Server } from '../core/server';
 import { Repository } from '../core/repository';
 import { IUser } from '../db/models/user/user';
 
-export class UserRepository extends Repository<IUser> {
+export class StrategiesRepository extends Repository<IUser> {
 
-  constructor(server: Server, userId: string) {
+  constructor(server: Server) {
     super({
       factory: server.factories.user,
-      userId: userId,
+      userId: server.systemUserId,
       aggregationQuery: {
         $lookup: [{
           from: 'roles',
@@ -17,15 +17,16 @@ export class UserRepository extends Repository<IUser> {
         }],
         $match: {
           'isDeleted': false,
-          'isSystem': false
+          'isSystem': false,
+          'status': 'active'
         },
         $unwind: ['$role'],
         $project: {
           'isAdmin': 1,
           'email': 1,
+          'passwordHash': 1,
           'firstName': 1,
           'lastName': 1,
-          'status': 1,
           'role': {
             'type': 1,
             'description': 1,

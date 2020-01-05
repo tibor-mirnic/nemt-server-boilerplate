@@ -1,6 +1,6 @@
-import { Server } from './../core/server';
-import { Repository } from './../core/repository';
-import { IRole } from './../db/models/role/role';
+import { Server } from '../core/server';
+import { Repository } from '../core/repository';
+import { IRole } from '../db/models/role/role';
 
 export class RoleRepository extends Repository<IRole> {
 
@@ -11,6 +11,11 @@ export class RoleRepository extends Repository<IRole> {
       aggregationQuery: {
         $match: {
           'isDeleted': false
+        },
+        $project: {
+          'type': 1,
+          'description': 1,
+          'permissions': 1
         }
       },
       auditLogger: server.auditLogger

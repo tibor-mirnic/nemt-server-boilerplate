@@ -1,14 +1,12 @@
 {
   "compileOnSave": true,
   "compilerOptions": {
-    "target": "ES2017",    
+    "target": "ES2017",
     "moduleResolution": "node",
-    
     "declaration": true,
     "sourceMap": true,
     "outDir": "./../dist",
     "rootDir": "./",
-    
     "strict": true,
     "strictPropertyInitialization": false,
     "noUnusedLocals": true,
@@ -16,8 +14,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,  
-
+    "emitDecoratorMetadata": true,
     "typeRoots": [
       "./node_modules/@types"
     ]
@@ -25,7 +22,7 @@
   "include": [
     "**/*"
   ],
-  "exclude": [    
+  "exclude": [
     "node_modules/**/*"
   ]
 }

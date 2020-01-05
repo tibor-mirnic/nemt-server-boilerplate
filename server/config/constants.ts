@@ -1,4 +1,4 @@
-import { IConstants } from './../core/models/constants';
+import { IConstants } from '../core/models/constants';
 
 export const constants: IConstants = {
   googleTokenAuth: 'some url',

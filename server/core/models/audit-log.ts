@@ -7,5 +7,5 @@ export enum AuditLogOperation {
 }
 
 export interface IAuditLogger {
-  log: (collectionName: string, entityId: string, userId: string, operation: AuditLogOperation, dataBefore: any, dataAfter: any) => Promise<void>
+  log: (collectionName: string, entityId: string, userId: string, operation: AuditLogOperation, dataBefore: any, dataAfter: any) => Promise<void>;
 }

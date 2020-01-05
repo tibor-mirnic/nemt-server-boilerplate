@@ -1,5 +1,4 @@
-let fileStreamRotator = require('file-stream-rotator');
-let busboy = require('connect-busboy');
+import { IUser } from '../db/models/user/user';
 
 import * as express from 'express';
 import { Document } from 'mongoose';
@@ -16,89 +15,101 @@ import * as morgan from 'morgan';
 import { Logger } from './logger';
 import { IEnvironment } from './models/environment';
 import { Environment } from './environment';
-import { IConstants } from './models/constants';
-import { ICache } from './models/cache';
 import { DbContext } from './db/db-context';
-import { Passport } from './auth/passport';
+import { PassportStrategies } from './auth/strategies';
 
-import { FactoryBuilder, IFactories } from './../db/factories';
+import { FactoryBuilder, IFactories } from '../db/factories';
 
 import { Util } from './util/util';
 
-import { IRequest } from './../core/models/express/request';
-import { IResponse } from './../core/models/express/response';
 import { SuccessHandler } from './handlers/success';
 import { ErrorHandler } from './handlers/error';
 
-import { RoutesModule } from './../routes/module';
-
+import { RoutesModule } from '../routes/module';
 // db
-import { permissions } from './../db/static/permissions';
-
-// cache
-import { UserCache } from './../cache/user';
-import { ReportCache } from './../core/cache/report';
-import { TokenCache } from './../core/cache/token';
-
+import { permissions } from '../db/static/permissions';
 // repositories
 import { AuditLogRepository } from '../repositories/audit-log';
-import { RoleRepository } from './../repositories/role';
-import { IRole } from './../db/models/role/role';
+import { RoleRepository } from '../repositories/role';
+import { IRole } from '../db/models/role/role';
+import { UserRepository } from '../repositories/user';
 
-import { UserRepository } from './../repositories/user';
+const fileStreamRotator = require('file-stream-rotator');
+const busboy = require('connect-busboy');
 
 export class Server {
   public serverLogPath: string;
-  public environmentsPath: string;
   public httpLogPath: string;
   public exportPath: string;
 
   public app: express.Application;
 
-  public logger: Logger;
   public environment: IEnvironment;
-  public constants: IConstants;
 
-  public dbContext: DbContext;
   public factories: IFactories;
 
   public auditLogger: AuditLogRepository;
 
-  public passport: Passport;
-
   public systemUserId: string;
 
-  public cache: ICache;
-
-  constructor() {    
+  constructor() {
     this.initFolderPaths();
-    
-    this.logger = new Logger(this.serverLogPath);
-    this.environment = Environment.load();      
+
+    Logger.init(this.serverLogPath);
+    this.environment = Environment.load();
+  }
+
+  // run the server
+  static async bootstrap() {
+    const server = new Server();
+
+    await server.initDatabase();
+
+    server.app = express();
+
+    await server.createSystemUser();
+    server.initAuditLogger();
+
+    // build middleware
+    server.useHeaders();
+    server.useBodyParser();
+    server.useBusboy();
+    server.useMorgan();
+
+    server.checkConnection();
+
+    server.buildPassportStrategies();
+    server.useRoutes();
+
+    server.useHandlers();
+
+    // setup database users and permissions
+    const superAdminRole = await server.upsertSuperAdminRole();
+    await server.upsertSuperAdminUser(superAdminRole);
+
+    // start server
+    server.startServer();
+
+    return server;
   }
 
   async initDatabase() {
-    try{
-      this.dbContext = await DbContext.connect(this.environment, this.logger);       
-      this.factories = FactoryBuilder.build(this.dbContext.getConnection());
-    }
-    catch(error) {
-      throw error;
-    }
+    await DbContext.connect(this.environment);
+    this.factories = FactoryBuilder.build(DbContext.getConnection());
   }
 
   initFolderPaths() {
     this.serverLogPath = join(__dirname, '../private', 'log', 'server');
     this.httpLogPath = join(__dirname, '../private', 'log', 'http');
-    this.exportPath = join(__dirname, '../private', 'tmp', 'export');    
+    this.exportPath = join(__dirname, '../private', 'tmp', 'export');
   }
 
   useHeaders() {
-    let corsOptions = {
+    const corsOptions = {
       origin: RegExp(this.environment.corsRegex),
       credentials: true
     };
-    
+
     this.app.use(cors(corsOptions));
     this.app.use(helmet.frameguard());
     this.app.options('*', cors(corsOptions));
@@ -111,22 +122,22 @@ export class Server {
       'extended': true
     }));
     this.app.use(bodyParser.json());
-    this.app.use(bodyParser.text({ 
-      'type': 'text/plain' 
+    this.app.use(bodyParser.text({
+      'type': 'text/plain'
     }));
   }
 
-  useBusboy() {  
+  useBusboy() {
     this.app.use(busboy({
       'limits': {
-        'fileSize': 1 * 1024 * 1024
+        'fileSize': 10 * 1024 * 1024
       }
     }));
   }
 
   useMorgan() {
-    let accessLogStream = fileStreamRotator.getStream({
-      'date_format' : 'YYYY-MM-DD',
+    const accessLogStream = fileStreamRotator.getStream({
+      'date_format': 'YYYY-MM-DD',
       'filename': join(this.httpLogPath, '%DATE%.log'),
       'frequency': 'daily',
       'verbose': false
@@ -137,70 +148,55 @@ export class Server {
   }
 
   checkConnection() {
-    this.app.use(this.dbContext.checkConnection.bind(this.dbContext));
+    this.app.use(DbContext.checkConnection);
   }
 
-  usePassport() {    
-    this.passport = new Passport(this);
+  buildPassportStrategies() {
+    const strategies = new PassportStrategies(this);
+    strategies.build();
   }
 
   useRoutes() {
-    let routingModule = new RoutesModule(this);
+    const routingModule = new RoutesModule(this);
     routingModule.build();
   }
 
   useHandlers() {
-    let successHandler = new SuccessHandler(this);
-    let errorHandler = new ErrorHandler(this);
-    
-    this.app.use((request: IRequest, response: IResponse, next: express.NextFunction) => {
-      successHandler.process(request, response, next);
-    });
-    
-    this.app.use((error: any, request: IRequest, response: IResponse, next: express.NextFunction) => {
-      errorHandler.process(error, request, response, next);
-    });
+    this.app.use(SuccessHandler.process);
+    this.app.use(ErrorHandler.process);
   }
 
   startServer() {
-    let options: ServerOptions = {
+    const options: ServerOptions = {
       key: readFileSync(this.environment.keys.key),
       cert: readFileSync(this.environment.keys.cert),
       passphrase: this.environment.keys.passphrase
     };
-    
-    createServer(options, <any>this.app).listen(this.environment.https.port, () => {
-      this.logger.info(`NODE: HTTPS listening on port ${this.environment.https.port}.`);
-    });
-  }
 
-  // add all database caches
-  initCache() {
-    this.cache = {      
-      report: ReportCache,
-      token: TokenCache,
-      user: new UserCache(this)
-    };
+    createServer(options, <any>this.app).listen(this.environment.https.port, () => {
+      Logger.info(`NODE: HTTPS listening on port ${ this.environment.https.port }.`);
+    });
   }
 
   // create AuditLogger
   initAuditLogger() {
     this.auditLogger = new AuditLogRepository(this);
   }
-  
+
   async createSystemUser(): Promise<void> {
     let system = await this.factories.user.model.findOne({
       'isSystem': true
     });
 
-    if(!system) {
-      system = new this.factories.user.model();      
+    if (!system) {
+      system = new this.factories.user.model();
       system.email = 'system';
       system.firstName = 'SYSTEM';
       system.lastName = 'SYSTEM';
       system.isSystem = true;
-      system.isDeleted = true;
+      (<IUser>system).isDeleted = true;
       system.role = undefined;
+      system.status = 'active';
 
       await system.save();
     }
@@ -209,104 +205,52 @@ export class Server {
   }
 
   async upsertSuperAdminRole(): Promise<Document & IRole> {
-    let rr = new RoleRepository(this, this.systemUserId);
+    const rr = new RoleRepository(this, this.systemUserId);
 
     let superAdminRole = await rr.databaseModel.findOne({
       'type': 'SUPER_ADMIN'
     });
 
-    if(!superAdminRole) {
+    if (!superAdminRole) {
       superAdminRole = await rr.create(role => {
         role.type = 'SUPER_ADMIN';
         role.description = 'Super administrator';
-        role.permissions = permissions.map(permission => {
-          return {
-            'type': permission.type,
-            'description': permission.description
-          };
-        });
+        role.permissions = permissions;
       });
-    }
-    else {
+    } else {
       superAdminRole = await rr.update(superAdminRole._id.toString(), role => {
-        role.permissions = permissions.map(permission => {
-          return {
-            'type': permission.type,
-            'description': permission.description
-          };
-        });
+        role.permissions = permissions;
       });
     }
 
     return superAdminRole;
-  }  
+  }
 
   async upsertSuperAdminUser(superAdminRole: Document & IRole) {
-    let ur = new UserRepository(this, this.systemUserId);
+    const ur = new UserRepository(this, this.systemUserId);
 
-    let admin = await ur.databaseModel.findOne({
+    const admin = await ur.databaseModel.findOne({
       'isAdmin': true
     });
 
-    if(!admin) {
-      admin = await ur.create(user => {
+    if (!admin) {
+      await ur.create(user => {
         user.email = this.environment.superAdmin.email;
         user.firstName = this.environment.superAdmin.firstName;
         user.lastName = this.environment.superAdmin.lastName;
         user.passwordHash = Util.generateHash(this.environment.superAdmin.password);
+        user.status = 'active';
         user.isAdmin = true;
         user.role = superAdminRole._id.toString();
       });
-    }
-    else {
-      admin = await ur.update(admin._id.toString(), user => {
+    } else {
+      await ur.update(admin._id.toString(), user => {
         user.email = this.environment.superAdmin.email;
         user.firstName = this.environment.superAdmin.firstName;
         user.lastName = this.environment.superAdmin.lastName;
         user.passwordHash = Util.generateHash(this.environment.superAdmin.password);
+        user.status = 'active';
       });
-    }   
-  }
-
-  // run the server
-  static async bootstrap() {
-    try {
-      let server = new Server();
-      
-      await server.initDatabase();
-
-      server.app = express();
-
-      await server.createSystemUser();
-      server.initAuditLogger();
-      
-      // build middleware
-      server.useHeaders();
-      server.useBodyParser();
-      server.useBusboy();  
-      server.useMorgan();
-      
-      server.checkConnection();
-      
-      server.usePassport();
-      server.useRoutes();
-
-      server.useHandlers();
-
-      // setup database users and permissions    
-      let superAdminRole = await server.upsertSuperAdminRole();    
-      await server.upsertSuperAdminUser(superAdminRole);
-
-      // had to be here because we need systemUser in the database
-      server.initCache();
-
-      // start server
-      server.startServer();
-
-      return server;
-    }
-    catch(error) {
-      throw error;
     }
   }
 }

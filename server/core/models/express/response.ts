@@ -8,5 +8,5 @@ export interface IResponse extends Response {
     url: string;
     params?: any;
     body?: any;
-  }
+  };
 }

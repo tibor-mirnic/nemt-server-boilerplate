@@ -1,9 +1,9 @@
 import { Router as ExpressRouter } from 'express';
 
-import { Server } from './../server';
-import { IRequest } from './../../core/models/express/request';
-import { IResponse } from './../../core/models/express/response';
-import { NotImplementedError } from './../error/user-friendly';
+import { Server } from '../server';
+import { IRequest } from '../models/express/request';
+import { IResponse } from '../models/express/response';
+import { NotImplementedError } from '../error/user-friendly';
 
 export class Router {
   server: Server;
@@ -11,8 +11,19 @@ export class Router {
 
   constructor(server: Server) {
     this.server = server;
-    
     this.router = ExpressRouter();
+  }
+
+  static handleError(error: any, request: IRequest, response: IResponse): any {
+    const emptyObject = JSON.stringify({});
+    response.onErrorRequestData = {
+      userIdentifier: request.user ? request.user.email : undefined,
+      url: request.originalUrl,
+      params: emptyObject === JSON.stringify(request.params) ? undefined : request.params,
+      body: emptyObject === JSON.stringify(request.body) ? undefined : request.body
+    };
+
+    return error;
   }
 
   initRoutes() {
@@ -27,22 +38,10 @@ export class Router {
 
   getUserId(request: IRequest): string {
     let id = this.server.systemUserId;
-    if(request.user) {
+    if (request.user) {
       id = request.user._id.toString();
     }
 
     return id;
-  }
-
-  handleError(error: any, request: IRequest, response: IResponse): any {
-    let emptyObject = JSON.stringify({});
-    response.onErrorRequestData = {
-      userIdentifier: request.user ? request.user.email : undefined,
-      url: request.originalUrl,
-      params: emptyObject === JSON.stringify(request.params) ? undefined : request.params,
-      body: emptyObject === JSON.stringify(request.body) ? undefined : request.body
-    }
-
-    return error;
   }
 }
