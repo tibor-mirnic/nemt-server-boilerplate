@@ -11,6 +11,7 @@ import { GoogleUtil } from '../util/google';
 import { StrategiesRepository } from '../../repositories/strategies';
 import { IUser } from '../../db/models/user/user';
 import { TokenRepository } from '../../repositories/token';
+import { constants } from '../../config/constants';
 
 export class PassportStrategies {
   strategiesRepository: StrategiesRepository;
@@ -48,7 +49,7 @@ export class PassportStrategies {
       }
 
       if (request.body.googleLogin) {
-        const data: any = await GoogleUtil.validateToken(this.server.constants.googleTokenAuth, password, this.server.environment.googleConfiguration.clientId);
+        const data: any = await GoogleUtil.validateToken(constants.googleTokenAuth, password, this.server.environment.googleConfiguration.clientId);
 
         if (data.email && data.email !== email) {
           throw new AuthenticationError('Login email mismatch!');

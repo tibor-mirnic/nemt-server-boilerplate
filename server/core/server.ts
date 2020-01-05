@@ -15,7 +15,6 @@ import * as morgan from 'morgan';
 import { Logger } from './logger';
 import { IEnvironment } from './models/environment';
 import { Environment } from './environment';
-import { IConstants } from './models/constants';
 import { DbContext } from './db/db-context';
 import { PassportStrategies } from './auth/strategies';
 
@@ -46,7 +45,6 @@ export class Server {
   public app: express.Application;
 
   public environment: IEnvironment;
-  public constants: IConstants;
 
   public factories: IFactories;
 
